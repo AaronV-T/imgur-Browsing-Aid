@@ -4,7 +4,7 @@
 <body>
 <h2 style="text-align:center">imgur Browsing Aid <span id="versionSpan"></span></h2>
 <div id="loadingDiv">Loading options, please wait.</div>
-<div id="mainDiv" style="display:none;">
+<div id="mainDiv" style="display:none;overflow:hidden;">
 	<h3 style="text-align:center;">Options</h3>
 	<table style="margin:0px auto;">
 		<tr><td><label>
@@ -40,7 +40,20 @@
 		<table id="blockedUserTable" style="margin:0px auto;">
 		</table>
 	</div>
+
 	
+	
+	
+	<div style="width:100%;text-align:center;position:fixed;bottom:0;">
+		<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+			<input type="hidden" name="cmd" value="_s-xclick">
+			<input type="hidden" name="hosted_button_id" value="FLE9GSV5HK9WU">
+			<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+			<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+		</form>
+		<p>Want to support the developer of the imgur Browsing Aid? You can donate by clicking the button above.</p>
+	</div>
+
 </div>
 
 <script src="options.js"></script>

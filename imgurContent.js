@@ -4,6 +4,8 @@ var skipPromoted, closeTopBar, removeViaMobileSpans, blockedUserList, followedUs
 var postUser;
 var rightTrueLeftFalse = true;
 var lastCommentUpdateTime = 0, lastCommentUpdateSkipped = false;
+var slideShowInterval;
+var slideShowRunning = false;
 
 //Create a MutationObserver to check if the user goes to a new post.
 var mutationObserver = new MutationObserver( function(mutations) {
@@ -44,12 +46,18 @@ window.addEventListener("message", function(event) {
 
 
 $(function() { //Keydown listener for left and right arrows. 
-   $(window).keydown(function(e) {
-       if(e.which == 37)
-		   rightTrueLeftFalse = false;
-	   else if (e.which == 39)
-		   rightTrueLeftFalse = true;
-   });
+	$(window).keydown(function(e) {
+		if(e.which == 37) {
+			rightTrueLeftFalse = false;
+			if (slideShowRunning)
+				stopSlideShow();
+		}
+		else if (e.which == 39) {
+			rightTrueLeftFalse = true;
+			if (e.ctrlKey && !slideShowRunning)
+				startSlideShow();
+		}
+	});
 });
 
 /*
@@ -80,6 +88,7 @@ function main() {
 		addBookmarkButton();
 		addFollowButton();
 		addBlockButton();
+		addToggleSlideShowButton();
 		
 		onNewPost();
 	});
@@ -191,6 +200,19 @@ function addFollowButton() {
 	document.getElementById("follow-poster").addEventListener("click", function() {
 		window.postMessage({ type: "FROM_PAGE", text: "follow user:" + postUser }, "*");
 	}, false);
+}
+
+//addToggleSlideShowButton: Adds slide show toggle button to post options.
+function addToggleSlideShowButton() {
+	var slideShowToggleDiv = document.createElement("div");
+	slideShowToggleDiv.setAttribute("style", "text-align:center;");
+	slideShowToggleDiv.setAttribute("id", "follow-poster");
+	
+	var textNode = document.createTextNode("toggle slideshow");
+	slideShowToggleDiv.appendChild(textNode);
+	document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(slideShowToggleDiv);
+	
+	slideShowToggleDiv.addEventListener("click", toggleSlideShow);
 }
 
 //blockUser: Adds user to blocked user list and then skips current post.
@@ -535,4 +557,27 @@ function skipPost() {
 		document.getElementsByClassName("btn btn-action navNext")[0].click();
 	else 
 		document.getElementsByClassName("btn navPrev icon icon-arrow-left")[0].click();
+}
+
+function startSlideShow() {
+	slideShowRunning = true;
+	
+	slideShowInterval = setInterval( function() {
+		document.getElementsByClassName("btn btn-action navNext")[0].click();
+	}, 5000);
+}
+
+function stopSlideShow() {
+	if (slideShowInterval !== undefined) {
+		clearInterval(slideShowInterval);
+		console.log("Slide show stopped.");
+	}
+	slideShowRunning = false;
+}
+
+function toggleSlideShow() {
+	if (slideShowRunning)
+		stopSlideShow();
+	else
+		startSlideShow();
 }
