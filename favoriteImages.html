@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Bookmarked Images | imgur Browsing Aid</title>
+<style>
+	td { padding-right:10px; font-weight:bold; }
+	span { cursor:pointer; }
+	
+	#directoriesTable { border: 2px solid #000000; }
+	#mainImagesDiv { border: 2px solid #000000; }
+	
+	.deleteImg { color: orange; }
+	.favoriteImage { 
+		cursor:pointer; 
+		border: 2px solid #434343;
+	}
+	.favoriteImage:hover {
+		border: 2px solid #ffd700;
+	}
+	.topDiv { margin:0px auto;width:1000px;text-align:center;overflow:hidden; }
+</style>
+	
+</head>
+<body style="background-color:#121212;color:#FFFFFF;font-size:18px;">
+
+<div id="loadingDiv">Loading bookmarked images, please wait.</div>
+<div id="mainDiv" style="display:none;">
+	<h2 style="text-align:center;">Your Bookmarked Images</h3>
+	<div class="topDiv">
+		<h3 id="currentDirectoryHeader" style="text-align:center;">Folder: </h3>
+		<span style="color:orange;" id="deleteCurrentDirectory"></span>
+		<span style="color:red;" id="deleteCurrentDirectoryError"></span>
+	</div>
+	<br/>
+	<div class="topDiv">
+		<div>
+			<input type="text" id="newDirectoryName" style="margin-right:10px;" maxlength="16" size="16">
+			<input type="button" value="Create Folder" id="newDirectoryButton" style="margin-right:10px;">
+			<span id="newDirectoryError" style="color:red"></span>
+		</div>
+	</div>
+	<br/>
+	<div class="topDiv">
+		<div style="width:50%;float:left;">
+			<input type="checkbox" id="requireDeleteConfirm">
+			Require confirmation on image deletion.
+		</div>
+		<div style="width:50%;float:left;">
+			You can <span style="color:#4E76C9;" id="syncButton">bookmark your favorites from imgur.</span>
+		</div>
+	</div>
+	<br/>
+	<div id="directoriesDiv">
+		<table id="directoriesTable" style="margin:0px auto;background-color:#434343;width:1000px;">
+		</table>
+	</div>
+	<br/>
+	<div id="mainImagesDiv" style="margin:0px auto;background-color:#434343;width:1000px;overflow:hidden;">
+		<div id="imagesDiv" style="padding:21px;">
+		</div>
+	</div>
+</div>
+
+<script src="jquery-2.1.4.min.js"></script>
+<script src="favoriteImages.js"></script>
+
+</body>
+</html>

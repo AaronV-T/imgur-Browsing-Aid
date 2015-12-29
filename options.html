@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head><title>Options | imgur Browsing Aid</title></head>
+<body>
+<h2 style="text-align:center">imgur Browsing Aid <span id="versionSpan"></span></h2>
+<div id="loadingDiv">Loading options, please wait.</div>
+<div id="mainDiv" style="display:none;">
+	<h3 style="text-align:center;">Options</h3>
+	<table style="margin:0px auto;">
+		<tr><td><label>
+			<input type="checkbox" id="promotedSkipCheckbox">
+			Skip promoted posts.
+		</label></td></tr>
+		<tr><td><label>
+			<input type="checkbox" id="topBarCloseCheckbox">
+			Automatically close notifications at top.
+		</label></td></tr>
+		<tr><td><label>
+			<input type="checkbox" id="removeViaMobileSpansCheckbox">
+			Remove "via Android" and "via iPhone" next to comment author names.
+		</label></td></tr>
+		<tr><td><label>
+			<input type="checkbox" id="synchronizedStorageCheckbox">
+			<span style="color:red;">Use Chrome synchronized storage. (Leave this unchecked for unlimited storage. If checked: bookmarked images will be limited to 630; favorite comments will be limited to around 80; followed users and blocked users counts will also be limited.)</span>
+		</label></td></tr>
+		<tr><td style="text-align:center;">
+			<br>
+			<button id="save">Save</button>
+			<div id="status"></div>
+		</td></tr>
+	</table>
+	<br/><br/>
+	<div style="width:50%;float:left;">
+		<h3 style="text-align:center;">Followed Users:</h3>
+		<table id="followedUserTable" style="margin:0px auto;">
+		</table>
+	</div>
+	<div style="width:50%;float:left;">
+		<h3 style="text-align:center;">Blocked Users:</h3>
+		<table id="blockedUserTable" style="margin:0px auto;">
+		</table>
+	</div>
+	
+</div>
+
+<script src="options.js"></script>
+</body>
+</html>
