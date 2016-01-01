@@ -3,8 +3,12 @@
 
 	"name": "imgur Browsing Aid",
 	"description": "Provides additional features to improve the imgur browsing experience.",
-	"version": "0.4.1",
+	"version": "0.4.2",
 
+	"background": { 
+		"scripts": ["jquery-2.1.4.min.js", "background.js"],
+		"persistent": false
+	},
 	"browser_action": {
 	  "default_icon": {
 		"19": "images/icon19.png",
@@ -16,7 +20,7 @@
 	"content_scripts": [
 		{
 			"matches": ["*://*.imgur.com/*"],
-			"js": ["jquery-2.1.4.min.js", "imgurContent.js"]
+			"js": ["jquery-2.1.4.min.js", "imgurContent.js", "messageSystemContent.js"]
 		},
 		{
 			"matches": ["*://*.imgur.com/account/favorites"],

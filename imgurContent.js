@@ -1,25 +1,23 @@
 $('body').ready(main);
 
-var skipPromoted, closeTopBar, removeViaMobileSpans, blockedUserList, followedUserList, favoriteCommentList;
+var skipPromoted, closeTopBar, removeViaMobileSpans, canSlideShow, slideShowTime, blockedUserList, followedUserList, favoriteCommentList;
+var notifyOnSpecialUsers;
 var postUser;
 var rightTrueLeftFalse = true;
 var lastCommentUpdateTime = 0, lastCommentUpdateSkipped = false;
-var slideShowInterval;
-var slideShowRunning = false;
+var slideShowInterval, slideShowRunning = false, slideShowPaused = false, slideShowSecondsRemaining;
 
-//Create a MutationObserver to check if the user goes to a new post.
+//Create a MutationObserver to check for changes on the page.
 var mutationObserver = new MutationObserver( function(mutations) {
 	for(var i = 0; i < mutations.length; i++){
 		var mut = mutations[i];
 		for(var j=0; j < mut.addedNodes.length; ++j){
 			//console.log(mut.addedNodes[j].className + " ::: " + mut.addedNodes[j].nodeName);
 			if(mut.addedNodes[j].className === undefined) continue;
-			else if(mut.addedNodes[j].className === "humanMsg")
+			else if(mut.addedNodes[j].className === "humanMsg") //The following node classNames all change once per new post: humanMsg, point-info left bold, views-info left
 				onNewPost();
 			else if((mut.addedNodes[j].className.indexOf("comment") > -1 || mut.addedNodes[j].className.indexOf("children") > -1) && mut.addedNodes[j].className != "favorite-comment")
 				onCommentsLoaded();
-			//The following node classNames all change once per new post: humanMsg, point-info left bold, views-info left
-			
 		}
 	}   
 } );
@@ -45,17 +43,27 @@ window.addEventListener("message", function(event) {
 }, false);
 
 
-$(function() { //Keydown listener for left and right arrows. 
+$(function() { //Keydown listener
 	$(window).keydown(function(e) {
-		if(e.which == 37) {
+		if(e.which == 37) { //Left arrow key
 			rightTrueLeftFalse = false;
 			if (slideShowRunning)
-				stopSlideShow();
+				slideShowStop();
 		}
-		else if (e.which == 39) {
+		else if (e.which == 39) { //Right arrow key
 			rightTrueLeftFalse = true;
-			if (e.ctrlKey && !slideShowRunning)
-				startSlideShow();
+			if (slideShowRunning) {
+				slideShowSecondsRemaining = slideShowTime;
+				updateSlideShowMessage(slideShowSecondsRemaining);
+			}
+		}
+		else if (e.which == 69) { //'e' key
+			if (slideShowRunning)
+				slideShowStop();
+		}
+		else if (e.which == 80) { //'p' key
+			if (slideShowRunning)
+				slideShowPause();
 		}
 	});
 });
@@ -76,11 +84,17 @@ function main() {
 		//Set defaults.
 		promotedSkipEnabled: false,
 		topBarCloseEnabled: true,
-		removeViaMobileSpansEnabled: true
+		removeViaMobileSpansEnabled: true,
+		slideShowModeEnabled: true,
+		slideShowSecondsPerPost: 10,
+		specialUserNotificationEnabled: true
 	}, function(items) {
 		skipPromoted = items.promotedSkipEnabled;
 		closeTopBar = items.topBarCloseEnabled;
 		removeViaMobileSpans = items.removeViaMobileSpansEnabled;
+		canSlideShow = items.slideShowModeEnabled;
+		slideShowTime = items.slideShowSecondsPerPost;
+		notifyOnSpecialUsers = items.specialUserNotificationEnabled;
 		
 		if (closeTopBar)
 			checkForTopBarAndClose();
@@ -88,7 +102,14 @@ function main() {
 		addBookmarkButton();
 		addFollowButton();
 		addBlockButton();
-		addToggleSlideShowButton();
+		if (canSlideShow)
+			addToggleSlideShowButton();
+		
+		//Give our added buttons a background color on hover to match the other buttons.
+		var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; }";
+		var style = document.createElement("style");
+		style.appendChild(document.createTextNode(buttonHoverCss));
+		document.getElementsByTagName('head')[0].appendChild(style);
 		
 		onNewPost();
 	});
@@ -126,8 +147,11 @@ function onNewPost() {
 		else
 			postUser = "";
 		
-		postSkipped = checkForBlockedUsers();
-	}	
+		postSkipped = checkForBlockedUsers(); //Even if skipped, it looks like postSkipped won't have false returned (probably because checkForBlockedUsers is accessing storage)
+	}
+	
+	if (!postSkipped && notifyOnSpecialUsers)
+		checkForSpecialUsers();
 }
 
 /*
@@ -141,6 +165,7 @@ function addBlockButton() {
 	var blockPosterDiv = document.createElement("div");
 	blockPosterDiv.setAttribute("style", "text-align:center");
 	blockPosterDiv.setAttribute("id", "block-poster");
+	blockPosterDiv.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("block user");
 	blockPosterDiv.appendChild(textNode);
@@ -156,6 +181,7 @@ function addBookmarkButton() {
 	var bookmarkPostDiv = document.createElement("div");
 	bookmarkPostDiv.setAttribute("style", "text-align:center;");
 	bookmarkPostDiv.setAttribute("id", "bookmark-post");
+	bookmarkPostDiv.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("bookmark post");
 	bookmarkPostDiv.appendChild(textNode);
@@ -192,6 +218,7 @@ function addFollowButton() {
 	var followPosterDiv = document.createElement("div");
 	followPosterDiv.setAttribute("style", "text-align:center;");
 	followPosterDiv.setAttribute("id", "follow-poster");
+	followPosterDiv.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("follow user");
 	followPosterDiv.appendChild(textNode);
@@ -207,12 +234,13 @@ function addToggleSlideShowButton() {
 	var slideShowToggleDiv = document.createElement("div");
 	slideShowToggleDiv.setAttribute("style", "text-align:center;");
 	slideShowToggleDiv.setAttribute("id", "follow-poster");
+	slideShowToggleDiv.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("toggle slideshow");
 	slideShowToggleDiv.appendChild(textNode);
 	document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(slideShowToggleDiv);
 	
-	slideShowToggleDiv.addEventListener("click", toggleSlideShow);
+	slideShowToggleDiv.addEventListener("click", slideShowToggle);
 }
 
 //blockUser: Adds user to blocked user list and then skips current post.
@@ -387,7 +415,11 @@ function checkForBlockedUsers() {
 				
 				for (i = 0; i < blockedUserList.length; i++) {
 					if (blockedUserList[i].toLowerCase() === postUser.toLowerCase()) {
-						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***")
+						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***");
+						if (blockedUserList[i].length > 16)
+							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
+						else
+							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i] + ")");
 						skipPost();
 						return true;
 					}
@@ -404,7 +436,11 @@ function checkForBlockedUsers() {
 				
 				for (i = 0; i < blockedUserList.length; i++) {
 					if (blockedUserList[i].toLowerCase() === postUser.toLowerCase()) {
-						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***")
+						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***");
+						if (blockedUserList[i].length > 16)
+							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
+						else
+							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i] + ")");
 						skipPost();
 						return true;
 					}
@@ -413,6 +449,12 @@ function checkForBlockedUsers() {
 			});
 		}
 	});
+}
+
+//checkForSpecialUsers: Checks if the post's creator is a "special" user, notifies if true.
+function checkForSpecialUsers() {
+	if (postUser.toLowerCase().indexOf("michaelcera") > -1 && postUser.toLowerCase().indexOf("photoshopped") > -1)
+		addNotification("Tip:", "Check the username.");
 }
 
 //checkForTopBarAndClose: If notifications bar is open, close it.
@@ -438,13 +480,19 @@ function checkIfPromotedPost() {
 //favoriteComment: Adds comment to favoriteComments.
 function favoriteComment() {
 	var superParent = this.parentNode.parentNode.parentNode.parentNode;
+	
+	var commentText = "";
+	for (i = 0; i < superParent.getElementsByTagName("p")[0].childNodes.length; i++) //Add the innerHTML of each childNode to commentText.
+		commentText += superParent.getElementsByTagName("p")[0].childNodes[i].innerHTML;
+	
 	console.log("https://imgur.com" + superParent.getElementsByClassName("item permalink-caption-link")[0].getAttribute("href"));
 	console.log(superParent.getElementsByClassName("author")[0].children[0].innerHTML);
-	console.log(superParent.getElementsByTagName("p")[0].firstChild.innerHTML);
+	console.log(commentText);
+	
 	var comment = {
 		url: "https://imgur.com" + superParent.getElementsByClassName("item permalink-caption-link")[0].getAttribute("href"),
 		userName: superParent.getElementsByClassName("author")[0].children[0].innerHTML,
-		text: superParent.getElementsByTagName("p")[0].firstChild.innerHTML
+		text: commentText
 	};
 	
 	chrome.storage.sync.get({ 
@@ -559,25 +607,53 @@ function skipPost() {
 		document.getElementsByClassName("btn navPrev icon icon-arrow-left")[0].click();
 }
 
-function startSlideShow() {
-	slideShowRunning = true;
-	
-	slideShowInterval = setInterval( function() {
-		document.getElementsByClassName("btn btn-action navNext")[0].click();
-	}, 5000);
+function slideShowPause() {
+	if (slideShowInterval && slideShowRunning) {
+		if (slideShowPaused) {
+			slideShowStart(true);
+			slideShowPaused = false;
+		}
+		else {
+			clearInterval(slideShowInterval);
+			slideShowPaused = true;
+		}
+	}
 }
 
-function stopSlideShow() {
-	if (slideShowInterval !== undefined) {
+function slideShowStart(unpausing) {
+	if (canSlideShow) {
+		if (!unpausing) {
+			slideShowRunning = true;
+			addSlideShowMessageBox();
+			slideShowSecondsRemaining = slideShowTime;
+			updateSlideShowMessage(slideShowSecondsRemaining);
+		}
+		
+		slideShowInterval = setInterval( function() {
+			if (slideShowSecondsRemaining <= 0) {
+				document.getElementsByClassName("btn btn-action navNext")[0].click();
+				slideShowSecondsRemaining = slideShowTime;
+			}
+			else
+				slideShowSecondsRemaining--;
+			updateSlideShowMessage(slideShowSecondsRemaining); //Call function in messageSystemContent.js
+		}, 1000);
+	}
+}
+
+function slideShowStop() {
+	if (slideShowInterval) {
 		clearInterval(slideShowInterval);
+		closeSlideShowMessageBox(); //Call function in messageSystemContent.js
+		slideShowPaused = false;
 		console.log("Slide show stopped.");
 	}
 	slideShowRunning = false;
 }
 
-function toggleSlideShow() {
+function slideShowToggle() {
 	if (slideShowRunning)
-		stopSlideShow();
+		slideShowStop();
 	else
-		startSlideShow();
+		slideShowStart(false);
 }

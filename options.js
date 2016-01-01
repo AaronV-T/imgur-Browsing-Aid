@@ -15,12 +15,20 @@ function restore_options() {
 	promotedSkipEnabled: false,
 	topBarCloseEnabled: true,
 	removeViaMobileSpansEnabled: true,
+	slideShowModeEnabled: true,
+	slideShowSecondsPerPost: 10,
+	notificationsEnabled: true,
+	specialUserNotificationEnabled: true,
 	useSynchronizedStorage: "neverSet"
   }, function(items) {
     document.getElementById('promotedSkipCheckbox').checked = items.promotedSkipEnabled;
 	document.getElementById('topBarCloseCheckbox').checked = items.topBarCloseEnabled;
 	document.getElementById('removeViaMobileSpansCheckbox').checked = items.removeViaMobileSpansEnabled;
 	document.getElementById('synchronizedStorageCheckbox').checked = items.useSynchronizedStorage;
+	document.getElementById('slideShowModeCheckbox').checked = items.slideShowModeEnabled;
+	document.getElementById('slideShowPostTimeTextbox').value = items.slideShowSecondsPerPost;
+	document.getElementById('notificationsCheckbox').checked = items.notificationsEnabled;
+	document.getElementById('specialUserNotificationCheckbox').checked = items.specialUserNotificationEnabled;
 	
 	if (items.useSynchronizedStorage == "neverSet") { //If the user just installed or just updated from < v0.4.0: convert storage to local.
 		moveStorage(true);
@@ -71,7 +79,16 @@ function save_options() {
 	var topBarClose = document.getElementById('topBarCloseCheckbox').checked;
 	var removeViaMobileSpans = document.getElementById('removeViaMobileSpansCheckbox').checked;
 	var useSync = document.getElementById('synchronizedStorageCheckbox').checked;
-  
+	var slideShowMode = document.getElementById('slideShowModeCheckbox').checked;
+	var slideShowPostTime = document.getElementById('slideShowPostTimeTextbox').value;
+	console.log(slideShowPostTime);
+	if (!slideShowPostTime || isNaN(slideShowPostTime) || slideShowPostTime < 1 || slideShowPostTime > 999) { //If slideShowPostTime is not a number between 1-3 characters long...
+		updateStatusText("Not saved. Please enter a valid number between 1 and 999 for the slide show seconds per post.", false);
+		return;
+	}
+	var useNotifications = document.getElementById('notificationsCheckbox').checked;
+	var specialUserNotify = document.getElementById('specialUserNotificationCheckbox').checked;
+	
 	if (useSync != lastSavedUseSynchronizedStorage) { //If the user changed their sync setting...
 		if (useSync) { //If they selected to use storage.sync: prompt for confirmation.
 			var confirmMove = confirm("Do you really wish to use Chrome sync?\n(Bookmarked images and favorite comments may be lost if you have too many.)");
@@ -88,16 +105,15 @@ function save_options() {
 		promotedSkipEnabled: promotedSkip,
 		topBarCloseEnabled: topBarClose,
 		removeViaMobileSpansEnabled: removeViaMobileSpans,
+		slideShowModeEnabled: slideShowMode,
+		slideShowSecondsPerPost: slideShowPostTime,
+		notificationsEnabled: useNotifications,
+		specialUserNotificationEnabled: specialUserNotify,
 		useSynchronizedStorage: useSync
 	}, function() {
 		lastSavedUseSynchronizedStorage = useSync;
 		
-		// Update status to let user know options were saved.
-		var status = document.getElementById('status');
-		status.textContent = 'Options saved. Please refresh any open imgur tabs.';
-		setTimeout(function() {
-			status.textContent = '';
-		}, 2000);
+		updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
 	});
 }
 
@@ -344,4 +360,19 @@ function unfollowUserHelper(userName) {
 			populateFollowedUserList();
 		});
 	}
+}
+
+function updateStatusText(text, saveSuccessful) {
+	// Update status to let user know options were saved.
+	var status = document.getElementById('status');
+	status.textContent = text;
+	
+	if (saveSuccessful) 
+		status.setAttribute("style", "color:black;");
+	else
+		status.setAttribute("style", "color:red;");
+	
+	setTimeout(function() {
+		status.textContent = '';
+	}, 3000);
 }
