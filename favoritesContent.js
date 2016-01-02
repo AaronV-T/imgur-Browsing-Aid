@@ -5,12 +5,6 @@ var imagesAdded = 0, favoritesFound = 0;
 
 $('body').ready(main);
 
-/*$(window).scroll( function() {
-   if($(window).scrollTop() + $(window).height() == $(document).height()) {
-       alert("bottom!");
-   }
-});*/
-
 /*
 
 

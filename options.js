@@ -19,6 +19,8 @@ function restore_options() {
 	slideShowSecondsPerPost: 10,
 	notificationsEnabled: true,
 	specialUserNotificationEnabled: true,
+	viewedIconsEnabled: true,
+	skipViewedPostsEnabled: false,
 	useSynchronizedStorage: "neverSet"
   }, function(items) {
     document.getElementById('promotedSkipCheckbox').checked = items.promotedSkipEnabled;
@@ -29,6 +31,8 @@ function restore_options() {
 	document.getElementById('slideShowPostTimeTextbox').value = items.slideShowSecondsPerPost;
 	document.getElementById('notificationsCheckbox').checked = items.notificationsEnabled;
 	document.getElementById('specialUserNotificationCheckbox').checked = items.specialUserNotificationEnabled;
+	document.getElementById('viewedIconsCheckbox').checked = items.viewedIconsEnabled;
+	document.getElementById('skipViewedPostsCheckbox').checked = items.skipViewedPostsEnabled;
 	
 	if (items.useSynchronizedStorage == "neverSet") { //If the user just installed or just updated from < v0.4.0: convert storage to local.
 		moveStorage(true);
@@ -88,6 +92,8 @@ function save_options() {
 	}
 	var useNotifications = document.getElementById('notificationsCheckbox').checked;
 	var specialUserNotify = document.getElementById('specialUserNotificationCheckbox').checked;
+	var viewedIcons = document.getElementById('viewedIconsCheckbox').checked
+	var skipViewed = document.getElementById('skipViewedPostsCheckbox').checked;
 	
 	if (useSync != lastSavedUseSynchronizedStorage) { //If the user changed their sync setting...
 		if (useSync) { //If they selected to use storage.sync: prompt for confirmation.
@@ -109,6 +115,8 @@ function save_options() {
 		slideShowSecondsPerPost: slideShowPostTime,
 		notificationsEnabled: useNotifications,
 		specialUserNotificationEnabled: specialUserNotify,
+		viewedIconsEnabled: viewedIcons,
+		skipViewedPostsEnabled: skipViewed,
 		useSynchronizedStorage: useSync
 	}, function() {
 		lastSavedUseSynchronizedStorage = useSync;

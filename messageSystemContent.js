@@ -55,9 +55,20 @@ function addNotification(reasonGiven, descriptionGiven) {
 	var closeMessageButton = document.createElement("span");
 	closeMessageButton.innerHTML = "Close";
 	closeMessageButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
-	closeMessageButton.setAttribute("class", "closeMessageButton");
+	//closeMessageButton.setAttribute("class", "closeMessageButton");
 	closeMessageButton.addEventListener("click", closeMessage);
 	notificationDiv.appendChild(closeMessageButton);
+	
+	if (descriptionGiven === "Post Already Viewed") {
+		var linebreak3 = document.createElement("br");
+		notificationDiv.appendChild(linebreak3);
+		
+		var allowButton = document.createElement("span");
+		closeMessageButton.innerHTML = "Press 'v' to disable.";
+		closeMessageButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
+		closeMessageButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
+		notificationDiv.appendChild(closeMessageButton);
+	}
 	
 	document.getElementsByTagName("body")[0].appendChild(notificationDiv);
 	activeNotification = document.getElementById("ibaNotification");

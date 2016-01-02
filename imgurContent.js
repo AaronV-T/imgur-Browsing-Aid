@@ -1,11 +1,12 @@
 $('body').ready(main);
 
 var skipPromoted, closeTopBar, removeViaMobileSpans, canSlideShow, slideShowTime, blockedUserList, followedUserList, favoriteCommentList;
-var notifyOnSpecialUsers;
-var postUser;
+var notifyOnSpecialUsers, markIconsViewed, skipViewed, skipViewedSaved, viewedPosts;
+var postUser, postID;
 var rightTrueLeftFalse = true;
 var lastCommentUpdateTime = 0, lastCommentUpdateSkipped = false;
 var slideShowInterval, slideShowRunning = false, slideShowPaused = false, slideShowSecondsRemaining;
+var isFirstPostAfterPageLoad;
 
 //Create a MutationObserver to check for changes on the page.
 var mutationObserver = new MutationObserver( function(mutations) {
@@ -14,8 +15,11 @@ var mutationObserver = new MutationObserver( function(mutations) {
 		for(var j=0; j < mut.addedNodes.length; ++j){
 			//console.log(mut.addedNodes[j].className + " ::: " + mut.addedNodes[j].nodeName);
 			if(mut.addedNodes[j].className === undefined) continue;
-			else if(mut.addedNodes[j].className === "humanMsg") //The following node classNames all change once per new post: humanMsg, point-info left bold, views-info left
+			else if(mut.addedNodes[j].className === "views-info left") {//The following node classNames all change once per new post: humanMsg, point-info left bold, views-info left
+				if (isFirstPostAfterPageLoad)
+					isFirstPostAfterPageLoad = false;
 				onNewPost();
+			}
 			else if((mut.addedNodes[j].className.indexOf("comment") > -1 || mut.addedNodes[j].className.indexOf("children") > -1) && mut.addedNodes[j].className != "favorite-comment")
 				onCommentsLoaded();
 		}
@@ -42,7 +46,6 @@ window.addEventListener("message", function(event) {
   }
 }, false);
 
-
 $(function() { //Keydown listener
 	$(window).keydown(function(e) {
 		if(e.which == 37) { //Left arrow key
@@ -65,6 +68,16 @@ $(function() { //Keydown listener
 			if (slideShowRunning)
 				slideShowPause();
 		}
+		else if (e.which == 86) { //'v' key
+			if (skipViewedSaved) {
+				if (skipViewed)
+					addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'v' to re-enable.");
+				else
+					addNotification("Notification:", "Skipping of viewed posts has been temporarily enabled. Press 'v' to disable.");
+				
+				skipViewed = !skipViewed;
+			}
+		}
 	});
 });
 
@@ -76,9 +89,6 @@ $(function() { //Keydown listener
 
 //main: Load options from storage and call member functions.
 function main() {
-	if (window.location.href.indexOf("favorites") > -1 && window.location.href.indexOf("favorites/") == -1) //If this is a favorites page, don't run. (This should be implemented a better way.)
-		return;
-
 	//Load options from storage, close top bar, add the button to block users, and call the onNewPost function.
 	chrome.storage.sync.get({ 
 		//Set defaults.
@@ -87,7 +97,9 @@ function main() {
 		removeViaMobileSpansEnabled: true,
 		slideShowModeEnabled: true,
 		slideShowSecondsPerPost: 10,
-		specialUserNotificationEnabled: true
+		specialUserNotificationEnabled: true,
+		viewedIconsEnabled: true,
+		skipViewedPostsEnabled: false
 	}, function(items) {
 		skipPromoted = items.promotedSkipEnabled;
 		closeTopBar = items.topBarCloseEnabled;
@@ -95,23 +107,37 @@ function main() {
 		canSlideShow = items.slideShowModeEnabled;
 		slideShowTime = items.slideShowSecondsPerPost;
 		notifyOnSpecialUsers = items.specialUserNotificationEnabled;
+		markIconsViewed = items.viewedIconsEnabled;
+		skipViewedSaved = items.skipViewedPostsEnabled;
+		skipViewed = items.skipViewedPostsEnabled;
 		
-		if (closeTopBar)
+		chrome.storage.local.get({
+			viewedPosts: new Array()
+		}, function(items2) {
+			viewedPostsArray = items2.viewedPosts;
+			
+			chrome.storage.local.getBytesInUse("viewedPosts", function(bytesInUse) { console.log("viewedPosts bytesInUse: " + bytesInUse + ". length: " + items2.viewedPosts.length); });
+			
+			if (closeTopBar)
 			checkForTopBarAndClose();
 	
-		addBookmarkButton();
-		addFollowButton();
-		addBlockButton();
-		if (canSlideShow)
-			addToggleSlideShowButton();
-		
-		//Give our added buttons a background color on hover to match the other buttons.
-		var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; }";
-		var style = document.createElement("style");
-		style.appendChild(document.createTextNode(buttonHoverCss));
-		document.getElementsByTagName('head')[0].appendChild(style);
-		
-		onNewPost();
+			addBookmarkButton();
+			addFollowButton();
+			addBlockButton();
+			if (canSlideShow)
+				addToggleSlideShowButton();
+			if (skipViewed)
+				addViewedTexts();
+			
+			//Give style to our added buttons and other elements.
+			var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; } .alreadyViewedIdentifier { position:absolute;z-index:999;top:0;right:0;border:1px solid;background-color:#DDDDDD;color:black;font-weight:bold; }";
+			var style = document.createElement("style");
+			style.appendChild(document.createTextNode(buttonHoverCss));
+			document.getElementsByTagName('head')[0].appendChild(style);
+			
+			isFirstPostAfterPageLoad = true;
+			onNewPost();
+		});
 	});
 }
 
@@ -147,11 +173,57 @@ function onNewPost() {
 		else
 			postUser = "";
 		
-		postSkipped = checkForBlockedUsers(); //Even if skipped, it looks like postSkipped won't have false returned (probably because checkForBlockedUsers is accessing storage)
+		var currentURL = window.location.href;
+		
+		var startIndex = -1;
+		if (currentURL.indexOf("imgur.com/gallery/") > -1)
+			startIndex = currentURL.indexOf("imgur.com/gallery/") + 18;
+		else if (currentURL.indexOf("imgur.com/account/favorites/") > -1)
+			startIndex = currentURL.indexOf("imgur.com/account/favorites/") + 28;
+		else if (currentURL.indexOf("imgur.com/a/") > -1)
+			startIndex = currentURL.indexOf("imgur.com/a/") + 12;
+		
+		var lastIndex = currentURL.length;
+		if (currentURL.substring(startIndex, currentURL.length).indexOf("/") > -1)
+			lastIndex = currentURL.substring(startIndex, currentURL.length).indexOf("/");
+		
+		if (startIndex > -1)
+			postID = currentURL.substring(startIndex, lastIndex);
+		else
+			postID = "unknown";
+		
+		checkForBlockedUsers(); //Check to see if post's creator is blocked, then continue to onNewPost2.
 	}
+}
+
+//onNewPost2: Continuation of onNewPost, called by checkForBlockedUsers when it has finished.
+function onNewPost2(postSkipped) {
+	if (!postSkipped && skipViewed && !isFirstPostAfterPageLoad) 
+		postSkipped = checkIfViewedPost();
 	
+	if (!postSkipped) {
+		if (postID !== "unknown") {
+			if (viewedPostsArray.length >= 10000)
+				viewedPostsArray.shift(); //Remove first element of the array.
+			
+			if (viewedPostsArray.indexOf(postID) == -1) {
+				viewedPostsArray.push(postID);
+				console.log(viewedPostsArray);
+				
+				chrome.storage.local.set({
+					viewedPosts: viewedPostsArray
+				}, function() {
+					
+				});
+			}
+		}
+	}
+		
 	if (!postSkipped && notifyOnSpecialUsers)
 		checkForSpecialUsers();
+	
+	if (markIconsViewed)
+		addViewedTexts();
 }
 
 /*
@@ -196,7 +268,7 @@ function addFavoriteCommentButtons() {
 	for (i = 0; i < existingFavoriteButtons.length; i++)
 		$('.favorite-comment').remove();
 	
-	console.log("adding comment buttons");
+	//console.log("adding comment buttons");
 	var commentOptionsButtons = document.getElementsByClassName("caption-toolbar edit-button like-combobox-but-not ");
 	for (i = 0; i < commentOptionsButtons.length; i++) {
 		var favoriteCommentDiv = document.createElement("div");
@@ -204,7 +276,7 @@ function addFavoriteCommentButtons() {
 		favoriteCommentDiv.setAttribute("style", "text-align:left;padding-left:10px;;");
 		var textNode = document.createTextNode("favorite");
 		favoriteCommentDiv.appendChild(textNode);
-		console.log("added favorite comment button");
+		//console.log("added favorite comment button");
 		commentOptionsButtons[i].getElementsByClassName("options")[0].appendChild(favoriteCommentDiv);
 	}
 	
@@ -241,6 +313,27 @@ function addToggleSlideShowButton() {
 	document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(slideShowToggleDiv);
 	
 	slideShowToggleDiv.addEventListener("click", slideShowToggle);
+}
+
+
+function addViewedTexts() {
+	var postIcons = document.getElementsByClassName("sg-item grid");
+	for (i = 0; i < postIcons.length; i++) {
+		if (postIcons[i].getElementsByClassName("alreadyViewedIdentifier").length == 0) {
+				var postIconID = postIcons[i].getAttribute("href");
+				var startIndex = 1;
+				if (postIconID.indexOf("/a/") == 0)
+					startIndex = 3;
+				
+				if (viewedPostsArray.indexOf(postIcons[i].getAttribute("href").substring(startIndex, postIconID.length)) > -1) {
+					var viewedSpan = document.createElement("span");
+					viewedSpan.setAttribute("class", "alreadyViewedIdentifier");
+					viewedSpan.innerHTML = "Viewed";
+					
+					postIcons[i].appendChild(viewedSpan);
+				}
+		}
+	}
 }
 
 //blockUser: Adds user to blocked user list and then skips current post.
@@ -291,6 +384,11 @@ function blockUser(userName) {
 
 //bookmarkPost: Adds post to bookmarked posts(favoritedImages).
 function bookmarkPost() {
+	if (postID === "unknown") {
+		alert("Oops, I wasn't able to get the post ID. Please sumbit a bug report with the URL of this page.");
+		return;
+	}
+	
 	var bookmarkedArrayMaxLength = 45;
 	
 	var titleCutoffIndex = 30;
@@ -303,7 +401,7 @@ function bookmarkPost() {
 
 
 	var bookmarkedImg = {
-		id: document.getElementsByClassName("post-image-container")[0].getAttribute("id"),
+		id: postID, //document.getElementsByClassName("post-image-container")[0].getAttribute("id"),
 		imgSrc: document.getElementsByClassName("sg-item selected grid")[0].getAttribute("style").substring(shortUrlStartIndex, shortUrlEndIndex),
 		title: document.getElementsByClassName("post-title font-opensans-bold")[0].innerHTML.substring(0, titleCutoffIndex),
 		directory: "root"
@@ -403,6 +501,7 @@ function bookmarkPost() {
 
 //checkForBlockedUsers: Checks if post creator is blocks, skips post if user is blocked.
 function checkForBlockedUsers() {
+	console.log("Checking if user is blocked.");
 	chrome.storage.sync.get({ 
 		useSynchronizedStorage: false
 	}, function(items) {
@@ -417,14 +516,15 @@ function checkForBlockedUsers() {
 					if (blockedUserList[i].toLowerCase() === postUser.toLowerCase()) {
 						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***");
 						if (blockedUserList[i].length > 16)
-							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
+							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
 						else
-							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i] + ")");
+							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i] + ")");
 						skipPost();
-						return true;
+						onNewPost2(true);
+						break;
 					}
 				}
-				return false;
+				onNewPost2(false);
 			});
 		}
 		else {
@@ -438,14 +538,15 @@ function checkForBlockedUsers() {
 					if (blockedUserList[i].toLowerCase() === postUser.toLowerCase()) {
 						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***");
 						if (blockedUserList[i].length > 16)
-							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
+							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
 						else
-							addNotification("Previous Post Skipped", "User is blocked: (" + blockedUserList[i] + ")");
+							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i] + ")");
 						skipPost();
-						return true;
+						onNewPost2(true);
+						break;
 					}
 				}
-				return false;
+				onNewPost2(false);
 			});
 		}
 	});
@@ -475,6 +576,22 @@ function checkIfPromotedPost() {
 	}
 	else 
 		return false;
+}
+
+//checkIfViewedPost: Checks if this post has already been viewed, skips the post if it has.
+function checkIfViewedPost() {
+	if (window.location.href.indexOf("imgur.com/gallery/") == -1) //If we are not in the gallery: return.
+		return;
+	
+	for (i = 0; i < viewedPostsArray.length; i++){
+		if (postID === viewedPostsArray[i]) {
+			console.log("Skipping post (Already Viewed): " + postID);
+			addNotification("Previous Post Skipped:", "Post Already Viewed");
+			skipPost();
+			return true;
+		}
+	}
+	return false;
 }
 
 //favoriteComment: Adds comment to favoriteComments.
@@ -591,7 +708,7 @@ function removeViaElements() {
 	var viaClassElements = document.getElementsByClassName("via");
 	var origLength = viaClassElements.length;
 	
-	console.log("starting removal: " + origLength);
+	//console.log("starting removal: " + origLength);
 	for (i = 0; i < origLength; i++) {
 		//console.log(i + " " + origLength + " removing via: " + viaClassElements[0].parentNode.firstChild.innerHTML);
 		viaClassElements[0].parentNode.removeChild(viaClassElements[0]);
@@ -656,4 +773,9 @@ function slideShowToggle() {
 		slideShowStop();
 	else
 		slideShowStart(false);
+}
+
+function temporarilyStopSkippingViewedPosts() {
+	skipViewed = false;
+	addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'v' to re-enable.");
 }
