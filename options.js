@@ -120,9 +120,15 @@ function save_options() {
 		skipViewedPostsEnabled: skipViewed,
 		useSynchronizedStorage: useSync
 	}, function() {
-		lastSavedUseSynchronizedStorage = useSync;
+		if (chrome.runtime.lastError) { 
+			updateStatusText("Something went wrong when trying to save.", false);
+			console.log("chrome.runtime.lastError: " + chrome.runtime.lastError);
+		}
+		else {
+			lastSavedUseSynchronizedStorage = useSync;
 		
-		updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
+			updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
+		}
 	});
 }
 

@@ -3,7 +3,7 @@
 
 	"name": "imgur Browsing Aid",
 	"description": "Provides additional features to improve the imgur browsing experience.",
-	"version": "0.5.0",
+	"version": "0.5.1",
 
 	"background": { 
 		"scripts": ["jquery-2.1.4.min.js", "background.js"],

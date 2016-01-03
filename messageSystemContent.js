@@ -69,6 +69,16 @@ function addNotification(reasonGiven, descriptionGiven) {
 		closeMessageButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
 		notificationDiv.appendChild(closeMessageButton);
 	}
+	else if (descriptionGiven === "Check the username.") {
+		var linebreak3 = document.createElement("br");
+		notificationDiv.appendChild(linebreak3);
+		
+		var allowButton = document.createElement("span");
+		closeMessageButton.innerHTML = "Click here to disable these notifications.";
+		closeMessageButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
+		closeMessageButton.addEventListener("click", permanentlyDisableSpecialUsersNotifications);
+		notificationDiv.appendChild(closeMessageButton);
+	}
 	
 	document.getElementsByTagName("body")[0].appendChild(notificationDiv);
 	activeNotification = document.getElementById("ibaNotification");

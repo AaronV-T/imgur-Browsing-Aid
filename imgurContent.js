@@ -707,6 +707,18 @@ function followUser(userName) {
 	});
 }
 
+//permanentlyDisableSpecialUsersNotifications: Sets the option to notify on special users to false.
+function permanentlyDisableSpecialUsersNotifications() {
+	notifyOnSpecialUsers = false;
+	
+	chrome.storage.sync.set({
+		specialUserNotificationEnabled: notifyOnSpecialUsers
+	}, function() {
+		if (!chrome.runtime.lastError) 
+			addNotification("Notification:", "You have disabled notifications for special users.");
+	});
+}
+
 //removeViaElements: Removes "via Android" and "via iPhone" links next to comment author names.
 function removeViaElements() {
 	//Not working everytime, what do we have to wait for?
