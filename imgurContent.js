@@ -1,7 +1,7 @@
 $('body').ready(main);
 
 var skipPromoted, closeTopBar, removeViaMobileSpans, canSlideShow, slideShowTime, blockedUserList, followedUserList, favoriteCommentList;
-var notifyOnSpecialUsers, markIconsViewed, skipViewed, skipViewedSaved, viewedPosts;
+var notifyOnSpecialUsers, markIconsViewed, skipViewed, viewedPostsArray;
 var postUser, postID;
 var rightTrueLeftFalse = true;
 var lastCommentUpdateTime = 0, lastCommentUpdateSkipped = false;
@@ -68,15 +68,16 @@ $(function() { //Keydown listener
 			if (slideShowRunning)
 				slideShowPause();
 		}
-		else if (e.which == 86) { //'v' key
-			if (skipViewedSaved) {
-				if (skipViewed)
-					addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'v' to re-enable.");
-				else
-					addNotification("Notification:", "Skipping of viewed posts has been temporarily enabled. Press 'v' to disable.");
-				
-				skipViewed = !skipViewed;
-			}
+		else if (e.which == 120) { //'F9' key
+			if (window.location.href.indexOf("imgur.com/account/favorites/") > -1) //Don't skip already viewed images when browsing your own favorites list.
+				return;
+		
+			if (skipViewed)
+				addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'F9' to re-enable.");
+			else
+				addNotification("Notification:", "Skipping of viewed posts has been temporarily enabled. Press 'F9' to disable.");
+			
+			skipViewed = !skipViewed;
 		}
 	});
 });
@@ -108,7 +109,6 @@ function main() {
 		slideShowTime = items.slideShowSecondsPerPost;
 		notifyOnSpecialUsers = items.specialUserNotificationEnabled;
 		markIconsViewed = items.viewedIconsEnabled;
-		skipViewedSaved = items.skipViewedPostsEnabled;
 		skipViewed = items.skipViewedPostsEnabled;
 		
 		chrome.storage.local.get({
@@ -130,13 +130,16 @@ function main() {
 				addViewedTexts();
 			
 			//Give style to our added buttons and other elements.
-			var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; } .alreadyViewedIdentifier { position:absolute;z-index:999;top:0;right:0;border:1px solid;background-color:#DDDDDD;color:black;font-weight:bold; }";
+			var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; } .alreadyViewedIdentifier { position:absolute;z-index:1;top:0;right:0;border:1px solid;background-color:#DDDDDD;color:black;font-weight:bold; }";
 			var style = document.createElement("style");
 			style.appendChild(document.createTextNode(buttonHoverCss));
 			document.getElementsByTagName('head')[0].appendChild(style);
 			
 			isFirstPostAfterPageLoad = true;
 			onNewPost();
+			setTimeout(function() { //Wait 1500ms to add viewed texts when the page has just loaded. (There must be a better way to wait for thumbnails to load, but I haven't gotten it.)
+				addViewedTexts();
+			}, 1500);
 		});
 	});
 }
@@ -178,8 +181,8 @@ function onNewPost() {
 		var startIndex = -1;
 		if (currentURL.indexOf("imgur.com/gallery/") > -1)
 			startIndex = currentURL.indexOf("imgur.com/gallery/") + 18;
-		else if (currentURL.indexOf("imgur.com/account/favorites/") > -1)
-			startIndex = currentURL.indexOf("imgur.com/account/favorites/") + 28;
+		else if (currentURL.indexOf("/favorites/") > -1)
+			startIndex = currentURL.indexOf("/favorites/") + 11;
 		else if (currentURL.indexOf("imgur.com/a/") > -1)
 			startIndex = currentURL.indexOf("imgur.com/a/") + 12;
 		
@@ -201,29 +204,26 @@ function onNewPost2(postSkipped) {
 	if (!postSkipped && skipViewed && !isFirstPostAfterPageLoad) 
 		postSkipped = checkIfViewedPost();
 	
+	if (markIconsViewed && !isFirstPostAfterPageLoad)
+		addViewedTexts();
+	
 	if (!postSkipped) {
 		if (postID !== "unknown") {
-			if (viewedPostsArray.length >= 10000)
-				viewedPostsArray.shift(); //Remove first element of the array.
-			
 			if (viewedPostsArray.indexOf(postID) == -1) {
+				if (viewedPostsArray.length >= 20000)
+					viewedPostsArray.shift(); //Remove first element of the array.
+				
 				viewedPostsArray.push(postID);
-				console.log(viewedPostsArray);
 				
 				chrome.storage.local.set({
 					viewedPosts: viewedPostsArray
-				}, function() {
-					
-				});
+				}, function() {});
 			}
 		}
 	}
 		
 	if (!postSkipped && notifyOnSpecialUsers)
 		checkForSpecialUsers();
-	
-	if (markIconsViewed)
-		addViewedTexts();
 }
 
 /*
@@ -317,6 +317,9 @@ function addToggleSlideShowButton() {
 
 
 function addViewedTexts() {
+	if (window.location.href.indexOf("imgur.com/account/favorites/") > -1) //Don't add viewed spans on your own favorites list thumbnails.
+		return;
+	
 	var postIcons = document.getElementsByClassName("sg-item grid");
 	for (i = 0; i < postIcons.length; i++) {
 		if (postIcons[i].getElementsByClassName("alreadyViewedIdentifier").length == 0) {
@@ -580,7 +583,9 @@ function checkIfPromotedPost() {
 
 //checkIfViewedPost: Checks if this post has already been viewed, skips the post if it has.
 function checkIfViewedPost() {
-	if (window.location.href.indexOf("imgur.com/gallery/") == -1) //If we are not in the gallery: return.
+	/*if (window.location.href.indexOf("imgur.com/gallery/") == -1) //If we are not in the gallery: return.
+		return;*/
+	if (window.location.href.indexOf("imgur.com/account/favorites/") > -1) //Don't skip already viewed images when browsing your own favorites list.
 		return;
 	
 	for (i = 0; i < viewedPostsArray.length; i++){
@@ -777,5 +782,5 @@ function slideShowToggle() {
 
 function temporarilyStopSkippingViewedPosts() {
 	skipViewed = false;
-	addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'v' to re-enable.");
+	addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'F9' to re-enable.");
 }

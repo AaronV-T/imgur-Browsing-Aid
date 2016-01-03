@@ -5,6 +5,7 @@ var moveRunning = false;
 
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
+document.getElementById('clearViewedPostsButton').addEventListener('click', deleteViewedPosts);
 
 document.getElementById("versionSpan").innerHTML = "(Version: " + chrome.runtime.getManifest().version + ")";
 
@@ -122,6 +123,21 @@ function save_options() {
 		lastSavedUseSynchronizedStorage = useSync;
 		
 		updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
+	});
+}
+
+
+
+
+function deleteViewedPosts() {
+	var confirmDelete = confirm("Do you really wish erase your viewed post history?");
+	if (!confirmDelete)
+		return;
+	
+	chrome.storage.local.set({
+		viewedPosts: new Array()
+	}, function() {
+		updateStatusText("Viewed posts history has been deleted.", true);
 	});
 }
 

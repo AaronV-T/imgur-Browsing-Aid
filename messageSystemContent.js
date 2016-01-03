@@ -64,7 +64,7 @@ function addNotification(reasonGiven, descriptionGiven) {
 		notificationDiv.appendChild(linebreak3);
 		
 		var allowButton = document.createElement("span");
-		closeMessageButton.innerHTML = "Press 'v' to disable.";
+		closeMessageButton.innerHTML = "Press 'F9' to disable.";
 		closeMessageButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
 		closeMessageButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
 		notificationDiv.appendChild(closeMessageButton);
