@@ -15,15 +15,18 @@ var mutationObserver = new MutationObserver( function(mutations) {
 		for(var j=0; j < mut.addedNodes.length; ++j){
 			//console.log(mut.addedNodes[j].className + " ::: " + mut.addedNodes[j].nodeName);
 			if(mut.addedNodes[j].className === undefined) continue;
-			else if(mut.addedNodes[j].className === "views-info left") {//The following node classNames all change once per new post: humanMsg, point-info left bold, views-info left
+			else if(mut.addedNodes[j].className === "views-info left") {
 				if (isFirstPostAfterPageLoad)
 					isFirstPostAfterPageLoad = false;
-				onNewPost();
+				setTimeout(function() {
+					onNewPost();
+				}, 10);
+				//The following node classNames all change once per new post: humanMsg, point-info left bold, views-info left
 			}
 			else if((mut.addedNodes[j].className.indexOf("comment") > -1 || mut.addedNodes[j].className.indexOf("children") > -1) && mut.addedNodes[j].className != "favorite-comment")
 				onCommentsLoaded();
 		}
-	}   
+	}
 } );
 mutationObserver.observe(document, { subtree: true, childList: true });
 
@@ -49,16 +52,10 @@ window.addEventListener("message", function(event) {
 $(function() { //Keydown listener
 	$(window).keydown(function(e) {
 		if(e.which == 37) { //Left arrow key
-			rightTrueLeftFalse = false;
-			if (slideShowRunning)
-				slideShowStop();
+			movedBack();
 		}
 		else if (e.which == 39) { //Right arrow key
-			rightTrueLeftFalse = true;
-			if (slideShowRunning) {
-				slideShowSecondsRemaining = slideShowTime;
-				updateSlideShowMessage(slideShowSecondsRemaining);
-			}
+			movedForward();
 		}
 		else if (e.which == 69) { //'e' key
 			if (slideShowRunning)
@@ -73,14 +70,15 @@ $(function() { //Keydown listener
 				return;
 		
 			if (skipViewed)
-				addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'F9' to re-enable.");
+				addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'F9' to re-enable."); //Call function in notificationsContent.js
 			else
-				addNotification("Notification:", "Skipping of viewed posts has been temporarily enabled. Press 'F9' to disable.");
+				addNotification("Notification:", "Skipping of viewed posts has been temporarily enabled. Press 'F9' to disable."); //Call function in notificationsContent.js
 			
 			skipViewed = !skipViewed;
 		}
 	});
 });
+
 
 /*
 
@@ -130,16 +128,32 @@ function main() {
 				addViewedTexts();
 			
 			//Give style to our added buttons and other elements.
-			var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; } .alreadyViewedIdentifier { position:absolute;z-index:1;top:0;right:0;border:1px solid;background-color:#DDDDDD;color:black;font-weight:bold; }";
+			var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; } .alreadyViewedIdentifier { position:absolute;z-index:1;top:1px;right:1px;background-color:rgba(0,0,0,0.5);color:white;font-weight:bold; }";
 			var style = document.createElement("style");
 			style.appendChild(document.createTextNode(buttonHoverCss));
 			document.getElementsByTagName('head')[0].appendChild(style);
 			
 			isFirstPostAfterPageLoad = true;
 			onNewPost();
-			setTimeout(function() { //Wait 1500ms to add viewed texts when the page has just loaded. (There must be a better way to wait for thumbnails to load, but I haven't gotten it.)
-				addViewedTexts();
-			}, 1500);
+			
+			document.getElementsByClassName("btn btn-action navNext")[0].addEventListener("click", movedForward);
+			document.getElementsByClassName("btn navPrev icon icon-arrow-left")[0].addEventListener("click", movedBack);
+			document.getElementById("side-gallery").addEventListener("click", movedBack); //If a thumbnail was clicked: treat it like the user moved back in the gallery.
+			
+			var checkCount = 0;
+			var checkThumbnails = setInterval(function() { //Check if the thumbnails have loaded once every 500ms (max 60 checks). If they have loaded: add the viewed icons.
+				console.log("checking");
+				var sgItems = document.getElementsByClassName("sg-item grid");
+				
+				if (sgItems.length > 0) {
+					clearInterval(checkThumbnails);
+					addViewedTexts();
+				}
+				else if (checkCount >= 60) 
+					clearInterval(checkThumnails);
+				else
+					checkCount++;
+			}, 500);
 		});
 	});
 }
@@ -195,13 +209,16 @@ function onNewPost() {
 		else
 			postID = "unknown";
 		
-		checkForBlockedUsers(); //Check to see if post's creator is blocked, then continue to onNewPost2.
+		if (rightTrueLeftFalse) //If the user is moving forward in the gallery: check to see if post's creator is blocked, then continue to onNewPost2.
+			checkForBlockedUsers(); 
+		else //If the user is moving back in the gallery: don't bother skipping if the post creator is blocked, just continue to onNewPost2.
+			onNewPost2(postSkipped);
 	}
 }
 
 //onNewPost2: Continuation of onNewPost, called by checkForBlockedUsers when it has finished.
 function onNewPost2(postSkipped) {
-	if (!postSkipped && skipViewed && !isFirstPostAfterPageLoad) 
+	if (!postSkipped && skipViewed && !isFirstPostAfterPageLoad && rightTrueLeftFalse) 
 		postSkipped = checkIfViewedPost();
 	
 	if (markIconsViewed && !isFirstPostAfterPageLoad)
@@ -320,20 +337,23 @@ function addViewedTexts() {
 	if (window.location.href.indexOf("imgur.com/account/favorites/") > -1) //Don't add viewed spans on your own favorites list thumbnails.
 		return;
 	
-	var postIcons = document.getElementsByClassName("sg-item grid");
-	for (i = 0; i < postIcons.length; i++) {
-		if (postIcons[i].getElementsByClassName("alreadyViewedIdentifier").length == 0) {
-				var postIconID = postIcons[i].getAttribute("href");
+	var postThumbnails = document.getElementsByClassName("sg-item grid");
+	for (i = 0; i < postThumbnails.length; i++) {
+		if (postThumbnails[i].getElementsByClassName("alreadyViewedIdentifier").length == 0) {
+				var postIconID = postThumbnails[i].getAttribute("href");
 				var startIndex = 1;
 				if (postIconID.indexOf("/a/") == 0)
 					startIndex = 3;
 				
-				if (viewedPostsArray.indexOf(postIcons[i].getAttribute("href").substring(startIndex, postIconID.length)) > -1) {
+				if (viewedPostsArray.indexOf(postThumbnails[i].getAttribute("href").substring(startIndex, postIconID.length)) > -1) {
 					var viewedSpan = document.createElement("span");
 					viewedSpan.setAttribute("class", "alreadyViewedIdentifier");
 					viewedSpan.innerHTML = "Viewed";
 					
-					postIcons[i].appendChild(viewedSpan);
+					postThumbnails[i].appendChild(viewedSpan);
+					
+					if (postThumbnails[i].getElementsByClassName("sg-item-num-images").length > 0) //If the thumbnail has an image-number icon: move it down.
+						$(postThumbnails[i].getElementsByClassName("sg-item-num-images")[0]).css("top", "24px");
 				}
 		}
 	}
@@ -707,6 +727,22 @@ function followUser(userName) {
 	});
 }
 
+function movedBack() {
+	rightTrueLeftFalse = false;
+	if (slideShowRunning)
+		slideShowPause();
+	console.log("movedBack");
+}
+
+function movedForward() {
+	rightTrueLeftFalse = true;
+	if (slideShowRunning) {
+		slideShowSecondsRemaining = slideShowTime;
+		updateSlideShowMessage(slideShowSecondsRemaining);
+	}
+	console.log("movedForward");
+}
+
 //permanentlyDisableSpecialUsersNotifications: Sets the option to notify on special users to false.
 function permanentlyDisableSpecialUsersNotifications() {
 	notifyOnSpecialUsers = false;
@@ -770,7 +806,7 @@ function slideShowStart(unpausing) {
 			}
 			else
 				slideShowSecondsRemaining--;
-			updateSlideShowMessage(slideShowSecondsRemaining); //Call function in messageSystemContent.js
+			updateSlideShowMessage(slideShowSecondsRemaining); //Call function in notificationsContent.js
 		}, 1000);
 	}
 }
@@ -778,7 +814,7 @@ function slideShowStart(unpausing) {
 function slideShowStop() {
 	if (slideShowInterval) {
 		clearInterval(slideShowInterval);
-		closeSlideShowMessageBox(); //Call function in messageSystemContent.js
+		closeSlideShowMessageBox(); //Call function in notificationsContent.js
 		slideShowPaused = false;
 		console.log("Slide show stopped.");
 	}

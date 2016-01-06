@@ -17,7 +17,6 @@ var mutationObserver = new MutationObserver( function(mutations) {
 } );
 mutationObserver.observe(document, { subtree: true, childList: true });
 
-
 function main() {
 	chrome.storage.sync.get({ 
 		//Set defaults.
@@ -25,21 +24,22 @@ function main() {
 	}, function(items) {
 		markIconsViewed = items.viewedIconsEnabled;
 		
-		chrome.storage.local.get({
-			viewedPosts: new Array()
-		}, function(items2) {
-			viewedPostsArray = items2.viewedPosts;
-			
-			if (markIconsViewed) {
+		if (markIconsViewed) {
+			chrome.storage.local.get({
+				viewedPosts: new Array()
+			}, function(items2) {
+				viewedPostsArray = items2.viewedPosts;
+				
 				//Give style to our added elements.
-				var css = ".alreadyViewedIdentifier { position:absolute;z-index:1;top:0;right:0;border:1px solid;background-color:#DDDDDD;color:black;font-weight:bold;line-height:20px; }";
+				var css = ".alreadyViewedIdentifier { position:absolute;z-index:1;top:1px;right:1px;background-color:rgba(0,0,0,0.5);color:white;font-weight:bold;line-height:20px; }";
 				var style = document.createElement("style");
 				style.appendChild(document.createTextNode(css));
 				document.getElementsByTagName('head')[0].appendChild(style);
-				
+					
 				addViewedTexts();	
-			}
-		});
+				
+			});
+		}
 	});
 }
 

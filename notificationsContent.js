@@ -3,7 +3,6 @@ var slideShowMessageBox;
 var closeNotificationInterval;
 var canDisplayNotifications;
 
-
 //Load notifications options from storage.
 chrome.storage.sync.get({ 
 	//Set defaults.
@@ -52,32 +51,31 @@ function addNotification(reasonGiven, descriptionGiven) {
 	descTxt.innerHTML = descriptionGiven;
 	notificationDiv.appendChild(descTxt);
 	
-	var closeMessageButton = document.createElement("span");
-	closeMessageButton.innerHTML = "Close";
-	closeMessageButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
-	//closeMessageButton.setAttribute("class", "closeMessageButton");
-	closeMessageButton.addEventListener("click", closeMessage);
-	notificationDiv.appendChild(closeMessageButton);
+	var closeNotificationButton = document.createElement("span");
+	closeNotificationButton.innerHTML = "Close";
+	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
+	closeNotificationButton.addEventListener("click", closeNotification);
+	notificationDiv.appendChild(closeNotificationButton);
 	
 	if (descriptionGiven === "Post Already Viewed") {
 		var linebreak3 = document.createElement("br");
 		notificationDiv.appendChild(linebreak3);
 		
 		var allowButton = document.createElement("span");
-		closeMessageButton.innerHTML = "Press 'F9' to disable.";
-		closeMessageButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
-		closeMessageButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
-		notificationDiv.appendChild(closeMessageButton);
+		closeNotificationButton.innerHTML = "Press 'F9' to disable.";
+		closeNotificationButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
+		closeNotificationButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
+		notificationDiv.appendChild(closeNotificationButton);
 	}
 	else if (descriptionGiven === "Check the username.") {
 		var linebreak3 = document.createElement("br");
 		notificationDiv.appendChild(linebreak3);
 		
 		var allowButton = document.createElement("span");
-		closeMessageButton.innerHTML = "Click here to disable these notifications.";
-		closeMessageButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
-		closeMessageButton.addEventListener("click", permanentlyDisableSpecialUsersNotifications);
-		notificationDiv.appendChild(closeMessageButton);
+		closeNotificationButton.innerHTML = "Click here to disable these notifications.";
+		closeNotificationButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
+		closeNotificationButton.addEventListener("click", permanentlyDisableSpecialUsersNotifications);
+		notificationDiv.appendChild(closeNotificationButton);
 	}
 	
 	document.getElementsByTagName("body")[0].appendChild(notificationDiv);
@@ -116,34 +114,86 @@ function addSlideShowMessageBox() {
 	msgDiv.appendChild(linebreak1);
 	
 	var pauseTxt = document.createElement("span");
-	pauseTxt.innerHTML = "Pause: 'p'";
+	pauseTxt.innerHTML = "Pause: 'p' or left arrow";
 	msgDiv.appendChild(pauseTxt);
 	
 	var linebreak2 = document.createElement("br");
 	msgDiv.appendChild(linebreak2);
 	
 	var stopTxt = document.createElement("span");
-	stopTxt.innerHTML = "Stop: 'e' or left arrow.";
+	stopTxt.innerHTML = "Stop: 'e'";
 	msgDiv.appendChild(stopTxt);
 	
-	var closeMessageButton = document.createElement("span");
-	closeMessageButton.innerHTML = "Close";
-	closeMessageButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
-	closeMessageButton.setAttribute("class", "closeMessageButton");
-	closeMessageButton.addEventListener("click", closeMessage);
-	msgDiv.appendChild(closeMessageButton);
+	var closeNotificationButton = document.createElement("span");
+	closeNotificationButton.innerHTML = "Close";
+	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
+	closeNotificationButton.setAttribute("class", "closeNotificationButton");
+	closeNotificationButton.addEventListener("click", closeNotification);
+	msgDiv.appendChild(closeNotificationButton);
 	
 	document.getElementsByTagName("body")[0].appendChild(msgDiv);
 	slideShowMessageBox = document.getElementById("slideShowMessageBox");
 }
 
+function addSystemNotification(notificationText) {
+	var notificationDiv = document.createElement("div");
+	notificationDiv.setAttribute("id", "ibaNotification");
+	
+	var msgWidth = 300;
+	var msgHeight = msgWidth / 2;
+		
+	notificationDiv.setAttribute("style", "z-index:9999;position:fixed;top:50px;left:50%;margin-left:-150px;height:" + msgHeight + "px;width:" + msgWidth + "px;border:2px solid;background-color:#121212;text-align:center;");
+	
+	var titleSpan = document.createElement("span");
+	titleSpan.innerHTML = "imgur Browsing Aid";
+	notificationDiv.appendChild(titleSpan);
+	
+	var linebreak1 = document.createElement("br");
+	notificationDiv.appendChild(linebreak1);
+	
+	var linebreak2 = document.createElement("br");
+	notificationDiv.appendChild(linebreak2);
+	
+	var notificationSpan = document.createElement("span");
+	notificationSpan.innerHTML = notificationText;
+	notificationDiv.appendChild(notificationSpan);
+		
+	var closeNotificationButton = document.createElement("span");
+	closeNotificationButton.innerHTML = "Close";
+	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
+	closeNotificationButton.addEventListener("click", closeSystemMessage);
+	notificationDiv.appendChild(closeNotificationButton);
+	
+	var aElements = notificationDiv.getElementsByTagName("a");
+	for ( i = 0; i < aElements.length; i++) {
+		aElements[i].addEventListener("click", function() {
+			chrome.storage.sync.set({
+				lastMessageRead: true
+			}, function() {});
+		});
+	}
+	
+	document.getElementsByTagName("body")[0].appendChild(notificationDiv);
+}
+
+
 function closeActiveNotification() {
 	$('#ibaNotification').remove();
 }
 
-function closeMessage() {
+function closeNotification() {
 	if (closeNotificationInterval)
 		clearInterval(closeNotificationInterval);
+	
+	var messageBox = this.parentNode;
+	
+	$(messageBox).remove();
+}
+
+function closeSystemMessage() {
+	chrome.storage.sync.set({
+		lastMessageRead: true
+	}, function() {});
 	
 	var messageBox = this.parentNode;
 	
