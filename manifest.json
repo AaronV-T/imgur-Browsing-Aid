@@ -20,7 +20,7 @@
 	"content_scripts": [
 		{
 			"matches": ["*://imgur.com/*"],
-			"js": ["systemMessagesContent.js", "notificationsContent.js"]
+			"js": ["jquery-2.1.4.min.js", "systemMessagesContent.js", "notificationsContent.js"]
 		},
 		{
 			"matches": ["*://imgur.com/"],

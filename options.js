@@ -36,7 +36,7 @@ function restore_options() {
 	document.getElementById('skipViewedPostsCheckbox').checked = items.skipViewedPostsEnabled;
 	
 	if (items.useSynchronizedStorage == "neverSet") { //If the user just installed or just updated from < v0.4.0: convert storage to local.
-		moveStorage(true);
+		moveStorage(true, false);
 		alert("An important update is taking place, this will only take about two seconds. \n(Note: The options page should never again randomly open.)\n\nYou may now press OK.");
 		
 		chrome.storage.sync.set({
@@ -100,12 +100,12 @@ function save_options() {
 		if (useSync) { //If they selected to use storage.sync: prompt for confirmation.
 			var confirmMove = confirm("Do you really wish to use Chrome sync?\n(Bookmarked images and favorite comments may be lost if you have too many.)");
 			if (confirmMove)
-				moveStorage(lastSavedUseSynchronizedStorage);
+				moveStorage(lastSavedUseSynchronizedStorage, useSync);
 			else
 				return;
 		}
 		else
-			moveStorage(lastSavedUseSynchronizedStorage);
+			moveStorage(lastSavedUseSynchronizedStorage, useSync);
 	}
 	  
 	chrome.storage.sync.set({
@@ -117,17 +117,18 @@ function save_options() {
 		notificationsEnabled: useNotifications,
 		specialUserNotificationEnabled: specialUserNotify,
 		viewedIconsEnabled: viewedIcons,
-		skipViewedPostsEnabled: skipViewed,
-		useSynchronizedStorage: useSync
+		skipViewedPostsEnabled: skipViewed
 	}, function() {
 		if (chrome.runtime.lastError) { 
 			updateStatusText("Something went wrong when trying to save.", false);
 			console.log("chrome.runtime.lastError: " + chrome.runtime.lastError);
 		}
 		else {
-			lastSavedUseSynchronizedStorage = useSync;
-		
-			updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
+			if (useSync == lastSavedUseSynchronizedStorage) {
+				//lastSavedUseSynchronizedStorage = useSync;
+			
+				updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
+			}
 		}
 	});
 }
@@ -148,7 +149,7 @@ function deleteViewedPosts() {
 }
 
 //moveStorage: Moves blockedUsers, followedUsers, favoriteComments, favoritedImages, and favoritedImagesDirectories to storage.local from storage.sync, or visa versa.
-function moveStorage(syncToLocal) {
+function moveStorage(syncToLocal, newSyncSetting) {
 	moveRunning = true;
 	if (syncToLocal) { //Convert from synchronized to local.
 		chrome.storage.sync.get({
@@ -211,6 +212,19 @@ function moveStorage(syncToLocal) {
 				}
 				else {
 					console.log("Storage moved from Chrome sync to local.");
+					chrome.storage.sync.set({
+						useSynchronizedStorage: newSyncSetting
+					}, function() {
+						if (chrome.runtime.lastError) { 
+							updateStatusText("Something went wrong when trying to save.", false);
+							console.log("chrome.runtime.lastError: " + chrome.runtime.lastError);
+						}
+						else {
+							lastSavedUseSynchronizedStorage = newSyncSetting;
+						
+							updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
+						}
+					});
 				}
 				moveRunning = false;
 			});
@@ -251,6 +265,19 @@ function moveStorage(syncToLocal) {
 				}
 				else {
 					console.log("Storage moved from local to Chrome sync.");
+					chrome.storage.sync.set({
+						useSynchronizedStorage: newSyncSetting
+					}, function() {
+						if (chrome.runtime.lastError) { 
+							updateStatusText("Something went wrong when trying to save.", false);
+							console.log("chrome.runtime.lastError: " + chrome.runtime.lastError);
+						}
+						else {
+							lastSavedUseSynchronizedStorage = newSyncSetting;
+						
+							updateStatusText("Options saved. Please refresh any open imgur tabs.", true);
+						}
+					});
 				}
 				moveRunning = false;
 			});

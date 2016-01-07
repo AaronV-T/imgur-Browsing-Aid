@@ -63,7 +63,7 @@ $(function() { //Keydown listener
 		}
 		else if (e.which == 80) { //'p' key
 			if (slideShowRunning)
-				slideShowPause();
+				slideShowPauseToggle();
 		}
 		else if (e.which == 120) { //'F9' key
 			if (window.location.href.indexOf("imgur.com/account/favorites/") > -1) //Don't skip already viewed images when browsing your own favorites list.
@@ -479,7 +479,15 @@ function bookmarkPost() {
 				if (items.favoritedImages13.length > 0)
 					bookmarkedImagesArray.push.apply(bookmarkedImagesArray, items.favoritedImages13);
 				
-				bookmarkedImagesArray.push(bookmarkedImg);
+				//If the user already has this post bookmarked: return.
+				for (i = 0; i < bookmarkedImagesArray.length; i++) {
+					if (bookmarkedImagesArray[i].id == bookmarkedImg.id) {
+						alert("You already have bookmarked this post.");
+						return;
+					}
+				}
+				
+				bookmarkedImagesArray.unshift(bookmarkedImg); //Add the post to the beginning of bookmarkedImagesArray.
 				
 				chrome.storage.sync.set({
 					favoritedImages: bookmarkedImagesArray.slice(0, bookmarkedArrayMaxLength),
@@ -509,7 +517,15 @@ function bookmarkPost() {
 			}, function(items) {
 				var bookmarkedImagesArray = items.favoritedImages;
 				
-				bookmarkedImagesArray.push(bookmarkedImg);
+				//If the user already has this post bookmarked: return.
+				for (i = 0; i < bookmarkedImagesArray.length; i++) {
+					if (bookmarkedImagesArray[i].id == bookmarkedImg.id) {
+						alert("You already have bookmarked this post.");
+						return;
+					}
+				}
+				
+				bookmarkedImagesArray.unshift(bookmarkedImg); //Add the post to the beginning of bookmarkedImagesArray.
 				
 				chrome.storage.local.set({
 					favoritedImages: bookmarkedImagesArray
@@ -729,9 +745,11 @@ function followUser(userName) {
 
 function movedBack() {
 	rightTrueLeftFalse = false;
-	if (slideShowRunning)
-		slideShowPause();
-	console.log("movedBack");
+	if (slideShowRunning && !slideShowPaused) {
+		slideShowSecondsRemaining = slideShowTime;
+		updateSlideShowMessage(slideShowSecondsRemaining);
+		slideShowPauseToggle();
+	}
 }
 
 function movedForward() {
@@ -739,8 +757,9 @@ function movedForward() {
 	if (slideShowRunning) {
 		slideShowSecondsRemaining = slideShowTime;
 		updateSlideShowMessage(slideShowSecondsRemaining);
+		if (slideShowPaused)
+			slideShowPauseToggle();
 	}
-	console.log("movedForward");
 }
 
 //permanentlyDisableSpecialUsersNotifications: Sets the option to notify on special users to false.
@@ -777,7 +796,7 @@ function skipPost() {
 		document.getElementsByClassName("btn navPrev icon icon-arrow-left")[0].click();
 }
 
-function slideShowPause() {
+function slideShowPauseToggle() {
 	if (slideShowInterval && slideShowRunning) {
 		if (slideShowPaused) {
 			slideShowStart(true);

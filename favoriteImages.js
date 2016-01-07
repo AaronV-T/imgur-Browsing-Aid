@@ -4,6 +4,7 @@ var currentDirName;
 var favoriteArrayMaxLength = 45;
 var dirDivPos;
 var imgDeletionConfirmation = true;
+var selectedPosts = new Array(), lastClickedPostID = "";
 
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('newDirectoryButton').addEventListener('click', createNewDirectory);
@@ -19,6 +20,26 @@ $(window).scroll(function() {
 		$('#directoriesDiv').css('position','fixed').css('top','0').css('left','50%').css('marginLeft','-500px');
 	else 
 		$('#directoriesDiv').css('position','static').css('left','').css('marginLeft','');    
+});
+
+$(function() { //keyup listener
+	$(window).keyup(function(e) {
+		if(e.which == 46) { //Delete key
+			if (selectedPosts.length < 1) 
+				return;
+			
+			var ask = confirm('Do you really wish to delete the ' + selectedPosts.length + ' selected posts?');
+			if(ask) {
+				/*for (i = 0; i < selectedPosts.length; i++)
+					deleteImg(selectedPosts[i], false);*/
+				
+				deleteImg(selectedPosts);
+				
+			}
+			
+		}
+
+	});
 });
 
 // Loads options from chrome.storage
@@ -141,7 +162,7 @@ function main() {
 }
 
 function allowDrop(ev) {
-	event.preventDefault();
+	ev.preventDefault();
 }
 
 function createNewDirectory() {
@@ -267,17 +288,29 @@ function deleteImgClick() {
 		deleteImg(this.parentNode.parentNode.firstChild.getAttribute("id"));
 }
 
-function deleteImg(delID) {
-	var delIndex = -1;
-	for (i = 0; i < favoritedImagesArray.length; i++) {
-		if (delID == favoritedImagesArray[i].id) {
-			delIndex = i;
-			break;
+function deleteImg(toDelete) {
+	if (toDelete.constructor === Array) {
+		for (i = 0; i < toDelete.length; i++) {
+			for (j = 0; j < favoritedImagesArray.length; j++) {
+				if (toDelete[i] == favoritedImagesArray[j].id) {
+					favoritedImagesArray.splice(j, 1);
+					break;
+				}
+			}
 		}
 	}
-	
-	if (delIndex > -1)
-		favoritedImagesArray.splice(delIndex, 1);
+	else if (typeof toDelete == "string"){
+		for (i = 0; i < favoritedImagesArray.length; i++) {
+			if (toDelete == favoritedImagesArray[i].id) {
+				favoritedImagesArray.splice(i, 1);
+				break;
+			}
+		}
+	}
+	else {
+		console.log(typeof toDelete);
+		return;
+	}
 	
 	chrome.storage.sync.get({ 
 		useSynchronizedStorage: false
@@ -320,6 +353,17 @@ function drop(ev) {
 	ev.preventDefault();
 	var id = ev.dataTransfer.getData("text");
 	console.log(id + " ::: " + ev.target.innerHTML);
+	
+	var movedPosts = new Array();
+	movedPosts.push(id);
+	
+	if (selectedPosts.length > 0) {
+		if (selectedPosts.indexOf(id) > -1) //The the post being dragged is selected: unselect it.
+			selectedPosts.splice(selectedPosts.indexOf(id), 1);
+			
+		for (i = 0; i < selectedPosts.length; i++) //Add every selected post to movedPosts.
+			movedPosts.push(selectedPosts[i]);
+	}
 	
 	chrome.storage.sync.get({ 
 		useSynchronizedStorage: false
@@ -372,10 +416,12 @@ function drop(ev) {
 				if (items.favoritedImages13.length > 0)
 					favoritedImagesArray.push.apply(favoritedImagesArray, items.favoritedImages13);
 				
-				for (i = 0; i < favoritedImagesArray.length; i++) {
-					if (id == favoritedImagesArray[i].id) {
-						favoritedImagesArray[i].directory = ev.target.innerHTML;
-						break;
+				for (i = 0; i < movedPosts.length; i++) {
+					for (j = 0; j < favoritedImagesArray.length; j++) {
+						if (movedPosts[i] == favoritedImagesArray[j].id) {
+							favoritedImagesArray[j].directory = ev.target.innerHTML;
+							break;
+						}
 					}
 				}
 				
@@ -407,10 +453,12 @@ function drop(ev) {
 			}, function(items) {
 				favoritedImagesArray = items.favoritedImages;
 				
-				for (i = 0; i < favoritedImagesArray.length; i++) {
-					if (id == favoritedImagesArray[i].id) {
-						favoritedImagesArray[i].directory = ev.target.innerHTML;
-						break;
+				for (i = 0; i < movedPosts.length; i++) {
+					for (j = 0; j < favoritedImagesArray.length; j++) {
+						if (movedPosts[i] == favoritedImagesArray[j].id) {
+							favoritedImagesArray[j].directory = ev.target.innerHTML;
+							break;
+						}
 					}
 				}
 				
@@ -444,7 +492,19 @@ function goToFavorites() {
 }
 
 function goToPost() {
-	chrome.tabs.create({ 'url': "http://imgur.com/account/favorites/" + this.getAttribute("id") });
+	chrome.tabs.create({ 'url': "http://imgur.com/account/favorites/" + this.getAttribute("postID") });
+}
+
+function highlightSelectedPosts() {
+	var favImgElements = document.getElementsByClassName("favoriteImage");
+	
+	for (i = 0; i < favImgElements.length; i++) {
+		if (selectedPosts.indexOf(favImgElements[i].getAttribute("id")) > -1)
+			$(favImgElements[i]).css("border",  "2px solid #ffd700");
+		else
+			$(favImgElements[i]).css("border",  "2px solid #434343");
+	}
+	
 }
 
 function populateDirectories() {
@@ -479,7 +539,12 @@ function populateDirectories() {
 }
 
 function populateImages() {
+	var postCount = 0;
+	
 	$('.imgDiv').remove();
+	selectedPosts = new Array();
+	document.getElementById("selectedPostCount").innerHTML = "Currently Selected Posts: " + selectedPosts.length;
+	
 	
 	var colCount = 0;
 	for (i = 0; i < favoritedImagesArray.length; i++) {
@@ -518,10 +583,17 @@ function populateImages() {
 			
 			var imgControlsDiv = document.createElement("div");
 			imgControlsDiv.setAttribute("style", "text-align: center;")
+			var viewImgSpan = document.createElement("span");
+			viewImgSpan.setAttribute("class", "viewImg");
+			viewImgSpan.setAttribute("style", "margin-right:10px;");
+			viewImgSpan.setAttribute("postID", favoritedImagesArray[i].id);
+			viewImgSpan.innerHTML = "View";
+			viewImgSpan.addEventListener("click", goToPost);
 			var deleteImgSpan = document.createElement("span");
 			deleteImgSpan.setAttribute("class", "deleteImg");
 			deleteImgSpan.innerHTML = "Delete";
 			
+			imgControlsDiv.appendChild(viewImgSpan);
 			imgControlsDiv.appendChild(deleteImgSpan);
 			
 			imgDiv.appendChild(img);
@@ -529,12 +601,16 @@ function populateImages() {
 			
 			var placementElement = document.getElementById("imagesDiv");
 			placementElement.appendChild(imgDiv);
+			
+			postCount++;
 		}
+		
+		document.getElementById("currentDirectoryPostCount").innerHTML = "Images: " + postCount;
 	}
 	
 	var favImgs = document.getElementsByClassName("favoriteImage");
 	for (i = 0; i < favImgs.length; i++) {
-		favImgs[i].addEventListener("click", goToPost);
+		favImgs[i].addEventListener("click", function(event) { postClicked(event, this.getAttribute("id")); });
 		favImgs[i].addEventListener("dragstart", drag);
 	}
 	
@@ -542,6 +618,61 @@ function populateImages() {
 	for (i = 0; i < deleteImgs.length; i++) {
 		deleteImgs[i].addEventListener("click", deleteImgClick);
 	}
+}
+
+function postClicked(ev, postID) {
+	if (ev.ctrlKey) { //If the control key is being held: ...
+		if (selectedPosts.indexOf(postID) > -1) //If the post is already selected: unselect it.
+			selectedPosts.splice(selectedPosts.indexOf(postID), 1);
+		else //If the post is not selected: select it.
+			selectedPosts.push(postID);
+			
+		lastClickedPostID = postID;
+	}
+	else if (ev.shiftKey) {
+		selectedPosts = new Array();
+		var favImgElements = document.getElementsByClassName("favoriteImage");
+		
+		
+		var lastClickedPostIndex, postIndex;
+		for (i = 0; i < favImgElements.length; i++) { 
+			if (favImgElements[i].getAttribute("id") == lastClickedPostID) 
+				lastClickedPostIndex = i;			
+			if (favImgElements[i].getAttribute("id") == postID)
+				postIndex = i;
+		
+		}
+		
+		var startID, endID;
+		if (lastClickedPostIndex < postIndex) {
+			startID = lastClickedPostID;
+			endID = postID;
+		}
+		else {
+			startID = postID;
+			endID = lastClickedPostID;
+		}
+		
+		var addToSelected = false;
+		for (i = 0; i < favImgElements.length; i++) {
+			if (favImgElements[i].getAttribute("id") == startID) 
+				addToSelected = true;
+			
+			if (addToSelected)
+				selectedPosts.push(favImgElements[i].getAttribute("id"));
+			
+			if (favImgElements[i].getAttribute("id") == endID)
+				addToSelected = false;
+		}
+	}
+	else { //Else: Make the clicked post the only selected post.
+		selectedPosts = new Array();
+		selectedPosts.push(postID);
+		lastClickedPostID = postID;
+	}
+	
+	highlightSelectedPosts();
+	document.getElementById("selectedPostCount").innerHTML = "Currently Selected Posts: " + selectedPosts.length;
 }
 
 function setCurrentDirName() {

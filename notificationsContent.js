@@ -120,6 +120,13 @@ function addSlideShowMessageBox() {
 	var linebreak2 = document.createElement("br");
 	msgDiv.appendChild(linebreak2);
 	
+	var unpauseTxt = document.createElement("span");
+	unpauseTxt.innerHTML = "Un-Pause: 'p' or right arrow";
+	msgDiv.appendChild(unpauseTxt);
+	
+	var linebreak3 = document.createElement("br");
+	msgDiv.appendChild(linebreak3);
+	
 	var stopTxt = document.createElement("span");
 	stopTxt.innerHTML = "Stop: 'e'";
 	msgDiv.appendChild(stopTxt);

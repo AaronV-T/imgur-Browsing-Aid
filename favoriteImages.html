@@ -15,10 +15,9 @@
 		cursor:pointer; 
 		border: 2px solid #434343;
 	}
-	.favoriteImage:hover {
-		border: 2px solid #ffd700;
-	}
+
 	.topDiv { margin:0px auto;width:1000px;text-align:center;overflow:hidden; }
+	.viewImg { color: orange; }
 </style>
 	
 </head>
@@ -28,9 +27,13 @@
 <div id="mainDiv" style="display:none;">
 	<h2 style="text-align:center;">Your Bookmarked Images</h3>
 	<div class="topDiv">
-		<h3 id="currentDirectoryHeader" style="text-align:center;">Folder: </h3>
+		<span id="currentDirectoryHeader" style="text-align:center;font-weight:bold;font-size:1.17em;">Folder: </span>
 		<span style="color:orange;" id="deleteCurrentDirectory"></span>
 		<span style="color:red;" id="deleteCurrentDirectoryError"></span>
+		<br>
+		<span id="currentDirectoryPostCount">Posts In Folder: 0</span>
+		<br>
+		<span id="selectedPostCount">Currently Selected Posts: 0</span>
 	</div>
 	<br/>
 	<div class="topDiv">
@@ -44,13 +47,13 @@
 	<div class="topDiv">
 		<div style="width:50%;float:left;">
 			<input type="checkbox" id="requireDeleteConfirm">
-			Require confirmation on image deletion.
+			Require confirmation on "Delete" button click.
 		</div>
 		<div style="width:50%;float:left;">
 			You can <span style="color:#4E76C9;" id="syncButton">bookmark your favorites from imgur.</span>
 		</div>
 	</div>
-	<br/>
+	<div style="text-align:center;font-size:12px">Multiple images can be selected by holding control or shift while clicking a post. Selected images can be dragged to a folder or deleted by pressing the "Delete" key.</div>
 	<div id="directoriesDiv">
 		<table id="directoriesTable" style="margin:0px auto;background-color:#434343;width:1000px;">
 		</table>
