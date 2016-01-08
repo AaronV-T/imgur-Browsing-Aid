@@ -20,6 +20,7 @@ function restore_options() {
 	slideShowSecondsPerPost: 10,
 	notificationsEnabled: true,
 	specialUserNotificationEnabled: true,
+	tollskiNotificationEnabled: true,
 	viewedIconsEnabled: true,
 	skipViewedPostsEnabled: false,
 	useSynchronizedStorage: "neverSet"
@@ -32,6 +33,7 @@ function restore_options() {
 	document.getElementById('slideShowPostTimeTextbox').value = items.slideShowSecondsPerPost;
 	document.getElementById('notificationsCheckbox').checked = items.notificationsEnabled;
 	document.getElementById('specialUserNotificationCheckbox').checked = items.specialUserNotificationEnabled;
+	document.getElementById('tollskiNotificationCheckbox').checked = items.tollskiNotificationEnabled;
 	document.getElementById('viewedIconsCheckbox').checked = items.viewedIconsEnabled;
 	document.getElementById('skipViewedPostsCheckbox').checked = items.skipViewedPostsEnabled;
 	
@@ -93,6 +95,7 @@ function save_options() {
 	}
 	var useNotifications = document.getElementById('notificationsCheckbox').checked;
 	var specialUserNotify = document.getElementById('specialUserNotificationCheckbox').checked;
+	var tollskiNotify = document.getElementById('tollskiNotificationCheckbox').checked;
 	var viewedIcons = document.getElementById('viewedIconsCheckbox').checked
 	var skipViewed = document.getElementById('skipViewedPostsCheckbox').checked;
 	
@@ -116,6 +119,7 @@ function save_options() {
 		slideShowSecondsPerPost: slideShowPostTime,
 		notificationsEnabled: useNotifications,
 		specialUserNotificationEnabled: specialUserNotify,
+		tollskiNotificationEnabled: tollskiNotify,
 		viewedIconsEnabled: viewedIcons,
 		skipViewedPostsEnabled: skipViewed
 	}, function() {

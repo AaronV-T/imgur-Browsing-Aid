@@ -57,33 +57,45 @@ function addNotification(reasonGiven, descriptionGiven) {
 	closeNotificationButton.addEventListener("click", closeNotification);
 	notificationDiv.appendChild(closeNotificationButton);
 	
+	var linebreak3 = document.createElement("br");
+	notificationDiv.appendChild(linebreak3);
+	
 	if (descriptionGiven === "Post Already Viewed") {
-		var linebreak3 = document.createElement("br");
-		notificationDiv.appendChild(linebreak3);
-		
-		var allowButton = document.createElement("span");
-		closeNotificationButton.innerHTML = "Press 'F9' to disable.";
-		closeNotificationButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
-		closeNotificationButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
-		notificationDiv.appendChild(closeNotificationButton);
+		var disableButton = document.createElement("span");
+		disableButton.innerHTML = "Press 'F9' to disable.";
+		disableButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
+		disableButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
+		notificationDiv.appendChild(disableButton);
 	}
-	else if (descriptionGiven === "Check the username.") {
-		var linebreak3 = document.createElement("br");
-		notificationDiv.appendChild(linebreak3);
-		
-		var allowButton = document.createElement("span");
-		closeNotificationButton.innerHTML = "Click here to disable these notifications.";
-		closeNotificationButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
-		closeNotificationButton.addEventListener("click", permanentlyDisableSpecialUsersNotifications);
-		notificationDiv.appendChild(closeNotificationButton);
+	else if (descriptionGiven === "Check the username.") {		
+		var disableButton = document.createElement("span");
+		disableButton.innerHTML = "Click to disable these notifications.";
+		disableButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
+		disableButton.addEventListener("click", permanentlyDisableSpecialUsersNotifications);
+		notificationDiv.appendChild(disableButton);
+	}
+	else if (descriptionGiven === "This post was made by the creator of the imgur Browsing Aid extension.") {
+		var disableButton = document.createElement("span");
+		disableButton.innerHTML = "Disable These Notifications";
+		disableButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
+		disableButton.addEventListener("click", permanentlyDisableTollskiNotifications);
+		notificationDiv.appendChild(disableButton);
 	}
 	
 	document.getElementsByTagName("body")[0].appendChild(notificationDiv);
 	activeNotification = document.getElementById("ibaNotification");
 	
+	var notificationBox = document.getElementById("ibaNotification");
+	while (($(notificationBox.lastChild).position().top + $(notificationBox.lastChild).height()) >  $(notificationBox).innerHeight()) { //While the inside text is vertically overflowing: decrease font-size by 10%.
+		console.log("Notification text overflow, fixing.");
+		var oldFontSize = parseInt($(notificationBox).css("font-size"));
+		var smallFontSize = oldFontSize * 0.9;
+		$(notificationBox).css("font-size", smallFontSize + "px");
+	}
+	
 	closeNotificationInterval = setInterval( function() {
 		closeActiveNotification();
-	}, 5000);
+	}, 6500);
 }
 
 function addSlideShowMessageBox() {

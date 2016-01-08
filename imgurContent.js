@@ -1,7 +1,7 @@
 $('body').ready(main);
 
 var skipPromoted, closeTopBar, removeViaMobileSpans, canSlideShow, slideShowTime, blockedUserList, followedUserList, favoriteCommentList;
-var notifyOnSpecialUsers, markIconsViewed, skipViewed, viewedPostsArray;
+var notifyOnSpecialUsers, notifyOnTollski, markIconsViewed, skipViewed, viewedPostsArray;
 var postUser, postID;
 var rightTrueLeftFalse = true;
 var lastCommentUpdateTime = 0, lastCommentUpdateSkipped = false;
@@ -97,6 +97,7 @@ function main() {
 		slideShowModeEnabled: true,
 		slideShowSecondsPerPost: 10,
 		specialUserNotificationEnabled: true,
+		tollskiNotificationEnabled: true,
 		viewedIconsEnabled: true,
 		skipViewedPostsEnabled: false
 	}, function(items) {
@@ -106,6 +107,7 @@ function main() {
 		canSlideShow = items.slideShowModeEnabled;
 		slideShowTime = items.slideShowSecondsPerPost;
 		notifyOnSpecialUsers = items.specialUserNotificationEnabled;
+		notifyOnTollski = items.tollskiNotificationEnabled;
 		markIconsViewed = items.viewedIconsEnabled;
 		skipViewed = items.skipViewedPostsEnabled;
 		
@@ -239,7 +241,7 @@ function onNewPost2(postSkipped) {
 		}
 	}
 		
-	if (!postSkipped && notifyOnSpecialUsers)
+	if (!postSkipped)
 		checkForSpecialUsers();
 }
 
@@ -593,8 +595,13 @@ function checkForBlockedUsers() {
 
 //checkForSpecialUsers: Checks if the post's creator is a "special" user, notifies if true.
 function checkForSpecialUsers() {
-	if (postUser.toLowerCase().indexOf("michaelcera") > -1 && postUser.toLowerCase().indexOf("photoshopped") > -1)
-		addNotification("Tip:", "Check the username.");
+	if (notifyOnSpecialUsers) {
+		if (postUser.toLowerCase().indexOf("michaelcera") > -1 && postUser.toLowerCase().indexOf("photoshopped") > -1)
+			addNotification("Tip:", "Check the username."); //Call function in notificationsContent.js
+	}
+
+	if (notifyOnTollski && postUser.indexOf("Tollski") == 0 && postUser.length == 7) 
+		addNotification("Tip:", "This post was made by the creator of the imgur Browsing Aid extension."); //Call function in notificationsContent.js
 }
 
 //checkForTopBarAndClose: If notifications bar is open, close it.
@@ -771,6 +778,18 @@ function permanentlyDisableSpecialUsersNotifications() {
 	}, function() {
 		if (!chrome.runtime.lastError) 
 			addNotification("Notification:", "You have disabled notifications for special users.");
+	});
+}
+
+//permanentlyDisableSpecialUsersNotifications: Sets the option to notify on special users to false.
+function permanentlyDisableTollskiNotifications() {
+	notifyOnTollski = false;
+	
+	chrome.storage.sync.set({
+		tollskiNotificationEnabled: notifyOnTollski
+	}, function() {
+		if (!chrome.runtime.lastError) 
+			addNotification("Notification:", "You have disabled notifications for Tollski.");
 	});
 }
 

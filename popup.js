@@ -1,4 +1,5 @@
 //Script injected into popup window.
+document.getElementById('donateSpan').addEventListener('click', openDonationPage);
 document.getElementById('openOptions').addEventListener('click', openOptions);
 document.getElementById('openFavoriteComments').addEventListener('click', openFavoriteComments);
 document.getElementById('openFavoriteImages').addEventListener('click', openFavoriteImages);
@@ -52,6 +53,10 @@ function getFollowedUserListAndPopulateHelper() {
 	var visitUserLinks = document.getElementsByClassName("visitUserPage");
 	for (i = 0; i < visitUserLinks.length; i++)
 		visitUserLinks[i].addEventListener("click", visitUserPage);
+}
+
+function openDonationPage() {
+	chrome.tabs.create({ 'url': "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FLE9GSV5HK9WU" });
 }
 
 function openFavoriteComments() {
