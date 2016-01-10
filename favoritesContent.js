@@ -24,10 +24,10 @@ function addSyncButton() {
 	syncButtonDiv.setAttribute("style", "text-align:center;");
 	syncButtonDiv.setAttribute("id", "sync-div");
 	
-	var syncButton = document.createElement("input");
-	syncButton.setAttribute("type", "button");
-	syncButton.setAttribute("value", "Sync Favorites");
+	var syncButton = document.createElement("div");
 	syncButton.setAttribute("id", "sync-favorites");
+	syncButton.innerHTML = "Sync Favorites";
+	syncButton.className = "btn btn-action";
 	syncButtonDiv.appendChild(syncButton);
 	
 	var placementElement = document.getElementById("imagelist");
