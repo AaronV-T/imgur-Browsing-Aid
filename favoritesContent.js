@@ -205,25 +205,22 @@ function syncFavoritesHelper() {
 }
 
 function syncMessageSetter(lastError) {
+	var messageElement = document.createElement("p");
+	messageElement.style.paddingTop = "25px";
+
 	if (lastError) { 
-		console.log("Error syncing: " + chrome.runtime.lastError.message);
-		var syncFailedSpan = document.createElement("span");
-		syncFailedSpan.setAttribute("style", "color:red;");
-		syncFailedSpan.innerHTML = 'Sync failed.';
-		
-		document.getElementById("sync-div").appendChild(document.createElement("br"));
-		document.getElementById("sync-div").appendChild(syncFailedSpan);
+		console.error("Error syncing: " + chrome.runtime.lastError.message);
+		messageElement.style.color = "red";
+		messageElement.innerHTML = 'Sync failed.';
 	}
 	else {
-		var syncSuccessfulSpan = document.createElement("p");
-		syncSuccessfulSpan.setAttribute("style", "color:#85bf25; padding-top:25px;");
-		syncSuccessfulSpan.innerHTML = 'Sync successful (' + imagesAdded + ' new images out of ' + favoritesFound +' favorites found). You can organize your bookmarked images via the "iBA"" icon in the top right.';
+		messageElement.style.color = "#85bf25";
+		messageElement.innerHTML = 'Sync successful (' + imagesAdded + ' new images out of ' + favoritesFound +' favorites found). You can organize your bookmarked images via the "iBA"" icon in the top right.';
 		
 		imagesAdded = 0;
 		favoritesFound = 0;
-		
-		document.getElementById("sync-div").appendChild(document.createElement("br"));
-		document.getElementById("sync-div").appendChild(syncSuccessfulSpan);
 	}
+
+	document.getElementById("sync-div").appendChild(messageElement);
 	syncRunning = false;
 }
