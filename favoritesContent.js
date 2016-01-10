@@ -215,8 +215,8 @@ function syncMessageSetter(lastError) {
 		document.getElementById("sync-div").appendChild(syncFailedSpan);
 	}
 	else {
-		var syncSuccessfulSpan = document.createElement("span");
-		syncSuccessfulSpan.setAttribute("style", "color:green;");
+		var syncSuccessfulSpan = document.createElement("p");
+		syncSuccessfulSpan.setAttribute("style", "color:#85bf25; padding-top:25px;");
 		syncSuccessfulSpan.innerHTML = 'Sync successful (' + imagesAdded + ' new images out of ' + favoritesFound +' favorites found). You can organize your bookmarked images via the "iBA"" icon in the top right.';
 		
 		imagesAdded = 0;
