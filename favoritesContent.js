@@ -21,7 +21,7 @@ function main() {
 */
 function addSyncButton() {
 	var syncButtonDiv = document.createElement("div");
-	syncButtonDiv.setAttribute("style", "text-align:center;");
+	syncButtonDiv.setAttribute("style", "text-align:center; padding-bottom:25px");
 	syncButtonDiv.setAttribute("id", "sync-div");
 	
 	var syncButton = document.createElement("div");
