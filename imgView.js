@@ -56,7 +56,6 @@ $(document).ready(function(){
       appendSettingsView();
       pressedTimes = 0;
       settingsViewAction = 1;
-      alert($("imgViewHeight").val());
     } else if (e.keyCode !== 17) {
       pressedTimes = 0;
     } else if (settingsViewAction == 1) {
@@ -69,21 +68,16 @@ $(document).ready(function(){
   //Saves changed settings
   $(document).on("click", "#saveSettings", function() {
     var inputMaxWidth = $("#imgViewWidth").val();
-    var inputMaxHeight = $("imgViewHeight").val();
-    alert($("imgViewHeight").val());
+    var inputMaxHeight = $("#imgViewHeight").val();
     var inputSneseX = $("#widthPercentage").val();
     var inputSenseY = $("#heightPercentage").val();
 
     maxWidth = inputMaxWidth;
     maxHeight = inputMaxHeight;
-    alert($("imgViewHeight").val());
     percentageSensX = inputSneseX;
     percentageSensY = inputSenseY;
-    $("#settingsView").remove();
-    alert($("imgViewHeight").val());
     settingsViewAction = 0;
   });
-  alert($("imgViewHeight").val());
 
   //Resets changed settings
   $(document).on("click", "#defaultSettings", function() {
