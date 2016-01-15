@@ -76,6 +76,7 @@ $(document).ready(function(){
     maxHeight = inputMaxHeight;
     percentageSensX = inputSneseX;
     percentageSensY = inputSenseY;
+    $("#settingsView").remove();
     settingsViewAction = 0;
   });
 
