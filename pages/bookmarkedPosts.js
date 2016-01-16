@@ -260,7 +260,7 @@ function deleteCurrentDirectory() {
 					favoritedImagesDirectories: favoritedImagesDirectoriesArray
 				}, function() {
 					chrome.tabs.getSelected(null,function(tab) {
-						chrome.tabs.update(tab.id, { url: "chrome-extension://" + chrome.runtime.id + "/favoriteImages.html" });
+						chrome.tabs.update(tab.id, { url: "chrome-extension://" + chrome.runtime.id + "/pages/bookmarkedPosts.html" });
 					});
 				});
 			}
@@ -269,7 +269,7 @@ function deleteCurrentDirectory() {
 					favoritedImagesDirectories: favoritedImagesDirectoriesArray
 				}, function() {
 					chrome.tabs.getSelected(null,function(tab) {
-						chrome.tabs.update(tab.id, { url: "chrome-extension://" + chrome.runtime.id + "/favoriteImages.html" });
+						chrome.tabs.update(tab.id, { url: "chrome-extension://" + chrome.runtime.id + "/pages/bookmarkedPosts.html" });
 					});
 				});
 			}
@@ -475,7 +475,7 @@ function drop(ev) {
 
 function goToDirectory() {
 	var dirName = this.innerHTML;
-	var href = "chrome-extension://" + chrome.runtime.id + "/favoriteImages.html";
+	var href = "chrome-extension://" + chrome.runtime.id + "/pages/bookmarkedPosts.html";
 	
 	if (dirName != "root")
 		href += "?" + dirName;

@@ -1,16 +1,26 @@
+//Check if the page is an "over capacity" error page.
+$('body').ready(function() {
+	var h1Elements = document.getElementsByTagName("h1");
+	
+	for (i = 0; i < h1Elements.length; i++) {
+		if (h1Elements[i].innerHTML == "Imgur is over capacity!") 
+			return;
+	}
+	
+	favoritesContentMain();
+});
+
 var favoritedImagesArray = new Array();
 var syncRunning = false;
 var favoriteArrayMaxLength = 45;
 var imagesAdded = 0, favoritesFound = 0;
-
-$('body').ready(main);
 
 /*
 
 
 
 */
-function main() {
+function favoritesContentMain() {
 	addSyncButton();
 }
 

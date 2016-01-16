@@ -1,4 +1,14 @@
-$('body').ready(main);
+//Check if the page is an "over capacity" error page.
+$('body').ready(function() {
+	var h1Elements = document.getElementsByTagName("h1");
+	
+	for (i = 0; i < h1Elements.length; i++) {
+		if (h1Elements[i].innerHTML == "Imgur is over capacity!") 
+			return;
+	}
+	
+	imgurContentMain();
+});
 
 var skipPromoted, closeTopBar, removeViaMobileSpans, canSlideShow, slideShowTime, blockedUserList, followedUserList, favoriteCommentList;
 var notifyOnSpecialUsers, notifyOnTollski, markIconsViewed, skipViewed, viewedPostsArray;
@@ -86,8 +96,8 @@ $(function() { //Keydown listener
 
 */
 
-//main: Load options from storage and call member functions.
-function main() {
+//imgurContentMain: Load options from storage and call member functions.
+function imgurContentMain() {
 	//Load options from storage, close top bar, add the button to block users, and call the onNewPost function.
 	chrome.storage.sync.get({ 
 		//Set defaults.

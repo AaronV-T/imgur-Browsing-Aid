@@ -2,7 +2,7 @@
 document.getElementById('donateSpan').addEventListener('click', openDonationPage);
 document.getElementById('openOptions').addEventListener('click', openOptions);
 document.getElementById('openFavoriteComments').addEventListener('click', openFavoriteComments);
-document.getElementById('openFavoriteImages').addEventListener('click', openFavoriteImages);
+document.getElementById('openBookmarkedPosts').addEventListener('click', openBookmarkedPosts);
 document.getElementById('openFeedback').addEventListener('click', openFeedback);
 
 var followedUserList = new Array();
@@ -60,11 +60,11 @@ function openDonationPage() {
 }
 
 function openFavoriteComments() {
-	chrome.tabs.create({ 'url': "chrome-extension://" + chrome.runtime.id + "/favoriteComments.html" });
+	chrome.tabs.create({ 'url': "chrome-extension://" + chrome.runtime.id + "/pages/favoriteComments.html" });
 }
 
-function openFavoriteImages() {
-	chrome.tabs.create({ 'url': "chrome-extension://" + chrome.runtime.id + "/favoriteImages.html" });
+function openBookmarkedPosts() {
+	chrome.tabs.create({ 'url': "chrome-extension://" + chrome.runtime.id + "/pages/bookmarkedPosts.html" });
 }
 
 function openFeedback() {

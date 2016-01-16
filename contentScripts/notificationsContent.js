@@ -17,8 +17,6 @@ function addNotification(reasonGiven, descriptionGiven) {
 		return;
 	
 	closeActiveNotification();
-	if (closeNotificationInterval)
-		clearInterval(closeNotificationInterval);
 	
 	var notificationDiv = document.createElement("div");
 	notificationDiv.setAttribute("id", "ibaNotification");
@@ -156,7 +154,7 @@ function addSlideShowMessageBox() {
 
 function addSystemNotification(notificationText) {
 	var notificationDiv = document.createElement("div");
-	notificationDiv.setAttribute("id", "ibaNotification");
+	notificationDiv.setAttribute("id", "ibaSystemNotification");
 	
 	var msgWidth = 300;
 	var msgHeight = msgWidth / 2;
@@ -198,6 +196,9 @@ function addSystemNotification(notificationText) {
 
 function closeActiveNotification() {
 	$('#ibaNotification').remove();
+	
+	if (closeNotificationInterval)
+		clearInterval(closeNotificationInterval);
 }
 
 function closeNotification() {
