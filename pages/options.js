@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
 document.getElementById('clearViewedPostsButton').addEventListener('click', deleteViewedPosts);
 
-document.getElementById("versionSpan").innerHTML = "(Version: " + chrome.runtime.getManifest().version + ")";
+document.getElementById("versionSpan").innerHTML = "(Version " + chrome.runtime.getManifest().version + ")";
 
 // Loads options from chrome.storage
 function restore_options() {
@@ -39,7 +39,8 @@ function restore_options() {
 	
 	if (items.useSynchronizedStorage == "neverSet") { //If the user just installed or just updated from < v0.4.0: convert storage to local.
 		moveStorage(true, false);
-		alert("An important update is taking place, this will only take about two seconds. \n(Note: The options page should never again randomly open.)\n\nYou may now press OK.");
+		
+        alert("Local storage is being initialized.\n\nYou may press OK at any time to dismiss this message.");
 		
 		chrome.storage.sync.set({
 			useSynchronizedStorage: false
@@ -90,7 +91,7 @@ function save_options() {
 	var slideShowPostTime = document.getElementById('slideShowPostTimeTextbox').value;
 	console.log(slideShowPostTime);
 	if (!slideShowPostTime || isNaN(slideShowPostTime) || slideShowPostTime < 1 || slideShowPostTime > 999) { //If slideShowPostTime is not a number between 1-3 characters long...
-		updateStatusText("Not saved. Please enter a valid number between 1 and 999 for the slide show seconds per post.", false);
+		updateStatusText("Not saved. Please enter a whole number between 1 and 999 for the slide show seconds-per-post option.", false);
 		return;
 	}
 	var useNotifications = document.getElementById('notificationsCheckbox').checked;
@@ -101,7 +102,7 @@ function save_options() {
 	
 	if (useSync != lastSavedUseSynchronizedStorage) { //If the user changed their sync setting...
 		if (useSync) { //If they selected to use storage.sync: prompt for confirmation.
-			var confirmMove = confirm("Do you really wish to use Chrome sync?\n(Bookmarked images and favorite comments may be lost if you have too many.)");
+			var confirmMove = confirm("Do you really wish to use Chrome online sync?\n(Bookmarked images and favorite comments may be lost if you have too many.)");
 			if (confirmMove)
 				moveStorage(lastSavedUseSynchronizedStorage, useSync);
 			else
@@ -124,7 +125,7 @@ function save_options() {
 		skipViewedPostsEnabled: skipViewed
 	}, function() {
 		if (chrome.runtime.lastError) { 
-			updateStatusText("Something went wrong when trying to save.", false);
+			updateStatusText("Error: Something went wrong when trying to save.", false);
 			console.log("chrome.runtime.lastError: " + chrome.runtime.lastError);
 		}
 		else {
@@ -141,14 +142,14 @@ function save_options() {
 
 
 function deleteViewedPosts() {
-	var confirmDelete = confirm("Do you really wish erase your viewed post history?");
+	var confirmDelete = confirm("Do you really want to erase your viewed post history?");
 	if (!confirmDelete)
 		return;
 	
 	chrome.storage.local.set({
 		viewedPosts: new Array()
 	}, function() {
-		updateStatusText("Viewed posts history has been deleted.", true);
+		updateStatusText("Viewed post history has been deleted.", true);
 	});
 }
 
