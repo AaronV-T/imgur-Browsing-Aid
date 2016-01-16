@@ -19,6 +19,7 @@ Known issues:
 * Failure to mark posts as viewed sometimes.
 
 To-Do List:
+* Enable WASD snake game control for tenkeyless / compact keyboards.
 * When slideshow mode is active, disable slideshow controls if the user is typing a comment.
 * Improve styles of bookmarked posts page.
 * Overhaul styles to match imgur's look and feel.
