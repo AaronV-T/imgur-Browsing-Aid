@@ -188,7 +188,7 @@ function createNewDirectory() {
 	}
 	
 	if (newDirectoryName == "root") {
-		document.getElementById("newDirectoryError").innerHTML = "You can not use that folder name.";
+		document.getElementById("newDirectoryError").innerHTML = "You can't use that folder name.";
 		return;
 	}
 	
@@ -234,7 +234,7 @@ function deleteCurrentDirectory() {
 	}
 	
 	if (!isEmpty) {
-		document.getElementById("deleteCurrentDirectoryError").innerHTML = "Folder must be empty to delete.";
+		document.getElementById("deleteCurrentDirectoryError").innerHTML = "The folder must be empty before you can delete it.";
 		return;
 	}
 	
@@ -247,7 +247,7 @@ function deleteCurrentDirectory() {
 	}
 	
 	if (dirIndex == -1) {
-		document.getElementById("deleteCurrentDirectoryError").innerHTML = "Folder not found. Can't be deleted.";
+		document.getElementById("deleteCurrentDirectoryError").innerHTML = "Folder not found.";
 	}
 	else {
 		favoritedImagesDirectoriesArray.splice(dirIndex, 1);
@@ -549,6 +549,7 @@ function populateImages() {
 	var colCount = 0;
 	for (i = 0; i < favoritedImagesArray.length; i++) {
 		if (favoritedImagesArray[i] == null) {
+            // TODO: Tell them how to submit a bug report.
 			console.log("favoritedImagesArray[" + i + "] was null. Please submit a bug report with this information.");
 			continue;
 		}
