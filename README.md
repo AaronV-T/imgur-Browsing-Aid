@@ -17,6 +17,7 @@ Feature List:
 Known issues:
 * Additional options not added to post options sometimes.
 * Failure to mark posts as viewed sometimes.
+* Failure to sync favorites to bookmarks has been reported.
 
 To-Do List:
 * Enable WASD snake game control for tenkeyless / compact keyboards.
