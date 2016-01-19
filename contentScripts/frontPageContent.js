@@ -1,9 +1,20 @@
-$('body').ready(main);
-console.log("frontPageContent.js");
 var markIconsViewed, viewedPosts;
+var notPostPage;
+
+$('body').ready(function() {
+	if (document.getElementsByClassName("post-container").length == 0) {
+		notPostPage = true;
+		frontPageMain();
+	}
+	else
+		notPostPage = false;
+});
 
 //Create a MutationObserver to check for changes on the page.
 var mutationObserver = new MutationObserver( function(mutations) {
+	if (!notPostPage)
+		return;
+	
 	for(var i = 0; i < mutations.length; i++){
 		var mut = mutations[i];
 		for(var j=0; j < mut.addedNodes.length; ++j){
@@ -17,7 +28,8 @@ var mutationObserver = new MutationObserver( function(mutations) {
 } );
 mutationObserver.observe(document, { subtree: true, childList: true });
 
-function main() {
+function frontPageMain() {
+	console.log("frontPageContent.js");
 	chrome.storage.sync.get({ 
 		//Set defaults.
 		viewedIconsEnabled: true

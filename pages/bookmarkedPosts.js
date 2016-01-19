@@ -152,6 +152,7 @@ function main() {
 	updateCurrentDirectoryHeader();
 	populateDirectories();
 	populateImages();
+	initializePostPreview();
 	
 	document.getElementById("requireDeleteConfirm").checked = imgDeletionConfirmation;
 	

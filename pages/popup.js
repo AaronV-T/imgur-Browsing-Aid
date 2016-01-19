@@ -1,5 +1,6 @@
 //Script injected into popup window.
 document.getElementById('donateSpan').addEventListener('click', openDonationPage);
+document.getElementById('snakeSpan').addEventListener('click', showSnakeGame);
 document.getElementById('openOptions').addEventListener('click', openOptions);
 document.getElementById('openFavoriteComments').addEventListener('click', openFavoriteComments);
 document.getElementById('openBookmarkedPosts').addEventListener('click', openBookmarkedPosts);
@@ -73,6 +74,13 @@ function openFeedback() {
 
 function openOptions() {
 	chrome.runtime.openOptionsPage();
+}
+
+function showSnakeGame() {
+	//Send message to selected tab to initializeSnakeGame.
+	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+		chrome.tabs.sendMessage(tabs[0].id, {messageType: "initializeSnakeGame"});
+	});
 }
 
 function visitUserPage() {

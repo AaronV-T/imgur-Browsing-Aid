@@ -65,7 +65,12 @@ function addNotification(reasonGiven, descriptionGiven) {
 		disableButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
 		notificationDiv.appendChild(disableButton);
 	}
-	else if (descriptionGiven === "Check the username.") {		
+	else if (descriptionGiven.indexOf("User is blocked:") == 0) {
+		$(descTxt).css("color", "red");
+	}
+	else if (descriptionGiven === "Check the username.") {
+		$(descTxt).css("color", "green");
+	
 		var disableButton = document.createElement("span");
 		disableButton.innerHTML = "Click to disable these notifications.";
 		disableButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");
@@ -73,6 +78,8 @@ function addNotification(reasonGiven, descriptionGiven) {
 		notificationDiv.appendChild(disableButton);
 	}
 	else if (descriptionGiven === "This post was made by the creator of the imgur Browsing Aid extension.") {
+		$(descTxt).css("color", "green");
+		
 		var disableButton = document.createElement("span");
 		disableButton.innerHTML = "Disable These Notifications";
 		disableButton.setAttribute("style", "cursor:pointer;color:#4E76C9;");

@@ -1,9 +1,19 @@
-$(document).keydown(function(e){
+// The original code for this game was made by following a great tutorial at http://thecodeplayer.com/walkthrough/html5-game-tutorial-make-a-snake-game-using-html5-canvas-jquery
+
+/*$(document).keydown(function(e){
 	if(e.which == "145") {
 		if (!document.getElementById("snakeGameDiv"))
 			initializeSnakeGame();
 	}
+});*/
+
+chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
+	if (msg.messageType && msg.messageType == "initializeSnakeGame") {
+		if (!document.getElementById("snakeGameDiv"))
+			initializeSnakeGame();
+	}
 });
+
 
 function initializeSnakeGame() {
 	console.log("initializing snake game");
@@ -54,7 +64,7 @@ function initializeSnakeGame() {
 	var score, highScore;
 	var paused;
 	var snakeArray; //Array of cells to make up the snake
-	var updateScreen;
+	var updateScreenInterval;
 	
 	//Keydown listener for controls.
 	$(document).keydown(function(e){
@@ -102,8 +112,8 @@ function initializeSnakeGame() {
 		document.getElementById("playerHighScoreSpan").innerHTML = "Your High Score: " + highScore;
 		paused = true;
 		
-		if (updateScreen)
-			clearInterval(updateScreen);
+		if (updateScreenInterval)
+			clearInterval(updateScreenInterval);
 		
 		paint();
 		
@@ -122,9 +132,9 @@ function initializeSnakeGame() {
 	
 	function startGame() {
 		//Start interval that will repaint every 60ms.
-		if (updateScreen) 
-			clearInterval(updateScreen);
-		updateScreen = setInterval(paint, 60);
+		if (updateScreenInterval) 
+			clearInterval(updateScreenInterval);
+		updateScreenInterval = setInterval(paint, 60);
 	}
 
 	function createSnake()	{
