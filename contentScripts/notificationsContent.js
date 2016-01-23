@@ -26,14 +26,14 @@ function addNotification(reasonGiven, descriptionGiven) {
 		msgWidth = 200;
 	else if (msgWidth < 150) //If the screen is too small: return.
 		return;
-	var msgHeight = msgWidth / 2;
+	//var msgHeight = msgWidth / 2;
 	
 	var topPos = 0;
 	var slideShowMsgBox = document.getElementById("slideShowMessageBox");
 	if (slideShowMsgBox)
 		topPos = slideShowMsgBox.style.height;
 	
-	notificationDiv.setAttribute("style", "z-index:9999;position:fixed;top:" + topPos + ";left:0;height:" + msgHeight + "px;width:" + msgWidth + "px;border:2px solid;background-color:#121212;text-align:center;");
+	notificationDiv.setAttribute("style", "z-index:9999;position: absolute;margin: 0 auto;width:"+msgWidth+"px;transform: translate(-50%);left: 50%;top:15%;border:2px solid;border-color: #2086E0;background-color: #272727;border-radius: .3em;padding: 0.6em;text-align:center;");
 	
 	var linebreak1 = document.createElement("br");
 	notificationDiv.appendChild(linebreak1);
@@ -120,7 +120,7 @@ function addSlideShowMessageBox() {
 		return;
 	var msgHeight = msgWidth / 2;
 	
-	msgDiv.setAttribute("style", "z-index:9999;position:fixed;top:0;left:0;height:" + msgHeight + "px;width:" + msgWidth + "px;border:2px solid;background-color:#121212;");
+	msgDiv.setAttribute("style", "z-index:9999;position: absolute;margin: 0 auto;width:"+msgWidth+"px;transform: translate(-50%);left: 50%;top: 15%;border:2px solid;border-color: #2086E0;background-color: #272727;border-radius: .3em;padding: 0.6em;text-align:center;");
 	
 	var timeTxt = document.createElement("span");
 	timeTxt.innerHTML = "Next Post: ";
@@ -150,7 +150,7 @@ function addSlideShowMessageBox() {
 	
 	var closeNotificationButton = document.createElement("span");
 	closeNotificationButton.innerHTML = "Close";
-	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
+	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top: .2em;right: .2em;color:#4E76C9;");
 	closeNotificationButton.setAttribute("class", "closeNotificationButton");
 	closeNotificationButton.addEventListener("click", closeNotification);
 	msgDiv.appendChild(closeNotificationButton);
@@ -164,10 +164,10 @@ function addSystemNotification(notificationText) {
 	notificationDiv.setAttribute("id", "ibaSystemNotification");
 	
 	var msgWidth = 300;
-	var msgHeight = msgWidth / 2;
+	//var msgHeight = msgWidth / 2;
 		
-	notificationDiv.setAttribute("style", "z-index:9999;position:fixed;top:50px;left:50%;margin-left:-150px;height:" + msgHeight + "px;width:" + msgWidth + "px;border:2px solid;background-color:#121212;text-align:center;");
-	
+	notificationDiv.setAttribute("style", "z-index:9999;position: absolute;margin: 0 auto;width:"+msgWidth+"px;transform: translate(-50%);left: 50%;top: 15%;border:2px solid;border-color: #2086E0;background-color: #272727;border-radius: .3em;padding: 0.6em;text-align:center;");
+
 	var titleSpan = document.createElement("span");
 	titleSpan.innerHTML = "imgur Browsing Aid";
 	notificationDiv.appendChild(titleSpan);
@@ -184,7 +184,7 @@ function addSystemNotification(notificationText) {
 		
 	var closeNotificationButton = document.createElement("span");
 	closeNotificationButton.innerHTML = "Close";
-	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
+	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top: .2em;right: .2em;color:#4E76C9;");
 	closeNotificationButton.addEventListener("click", closeSystemMessage);
 	notificationDiv.appendChild(closeNotificationButton);
 	
