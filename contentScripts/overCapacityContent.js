@@ -23,9 +23,24 @@ function loadOverCapacityContent() {
 	
 		if (overCapacityDate == "neverSet") {
 			var d = new Date();
-			overCapacityDate = d.getDate();
+			
+			var theMonth = d.getMonth();
+			if (theMonth == 0) theMonth = "January";
+			else if (theMonth == 1) theMonth = "February";
+			else if (theMonth == 2) theMonth = "March";
+			else if (theMonth == 3) theMonth = "April";
+			else if (theMonth == 4) theMonth = "May";
+			else if (theMonth == 5) theMonth = "June";
+			else if (theMonth == 6) theMonth = "July";
+			else if (theMonth == 7) theMonth = "August";
+			else if (theMonth == 8) theMonth = "September";
+			else if (theMonth == 9) theMonth = "October";
+			else if (theMonth == 10) theMonth = "November";
+			else if (theMonth == 11) theMonth = "December";
+			
+			overCapacityDate = d.getDate() + " " + theMonth + " " + d.getFullYear();
 		}
-		
+		console.log("overCapacityDate: " + overCapacityDate);
 		chrome.storage.sync.set({
 			overCapacityPageViews: overCapacityViews,
 			overCapacityCountDate: overCapacityDate

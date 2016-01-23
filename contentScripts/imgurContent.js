@@ -25,7 +25,7 @@ var mutationObserver = new MutationObserver( function(mutations) {
 		for(var j=0; j < mut.addedNodes.length; ++j){
 			//console.log(mut.addedNodes[j].className + " ::: " + mut.addedNodes[j].nodeName);
 			if(mut.addedNodes[j].className === undefined) continue;
-			else if(mut.addedNodes[j].className === "views-info left") {
+			else if(mut.addedNodes[j].className.indexOf("views-info left") >-1 ) {
 				if (isFirstPostAfterPageLoad)
 					isFirstPostAfterPageLoad = false;
 				setTimeout(function() {
@@ -211,13 +211,20 @@ function onNewPost() {
 			startIndex = currentURL.indexOf("/favorites/") + 11;
 		else if (currentURL.indexOf("imgur.com/a/") > -1)
 			startIndex = currentURL.indexOf("imgur.com/a/") + 12;
+		else if (currentURL.indexOf("imgur.com/r/") > -1 || currentURL.indexOf("imgur.com/topic/") > -1) {
+			startIndex = currentURL.lastIndexOf("/") + 1;
+		}
 		
 		var lastIndex = currentURL.length;
 		if (currentURL.substring(startIndex, currentURL.length).indexOf("/") > -1)
 			lastIndex = currentURL.substring(startIndex, currentURL.length).indexOf("/");
 		
-		if (startIndex > -1)
+		if (startIndex > -1) {
 			postID = currentURL.substring(startIndex, lastIndex);
+			
+			if (postID.length < 5 || postID.length > 7)
+				postID = "unknown";
+		}
 		else
 			postID = "unknown";
 		
@@ -518,7 +525,7 @@ function bookmarkPost() {
 					favoritedImages13: bookmarkedImagesArray.slice(13 * bookmarkedArrayMaxLength , 14 * bookmarkedArrayMaxLength)
 				}, function() {
 					if (!chrome.runtime.lastError)
-						console.log("post bookmarked");
+						console.log("post bookmarked: " + postID);
 				});
 			});
 		}
@@ -543,7 +550,7 @@ function bookmarkPost() {
 					favoritedImages: bookmarkedImagesArray
 				}, function() {
 					if (!chrome.runtime.lastError)
-						console.log("post bookmarked");
+						console.log("post bookmarked: " + postID);
 				});
 			});
 		}
@@ -817,10 +824,34 @@ function removeViaElements() {
 	
 }
 
-//skipPost: Clicks the next or previous button depending on if the right arrow key or left array key was pushed last.
+//skipPost: Skips current post.
 function skipPost() {
-	if (rightTrueLeftFalse)
-		document.getElementsByClassName("btn btn-action navNext")[0].click();
+	if (rightTrueLeftFalse){
+		if (skipViewed) { //If skipping viewed posts is enabled: find the next non-viewed/non-downvoted post and click it.
+			var sgItems = document.getElementsByClassName("sg-item grid");
+			var foundCurrentSgItem = false, foundNextNonViewed = false;
+			for (i = 0; i < sgItems.length; i++) {
+				console.log("searching sg item");
+				if (!foundCurrentSgItem) {
+					if (sgItems[i].className == "sg-item selected grid")
+						foundCurrentSgItem = true;
+				}
+				else {
+					if (sgItems[i].getElementsByClassName("alreadyViewedIdentifier").length == 0 && sgItems[i].getElementsByClassName("sg-item-vote icon-downvote").length == 0) {
+						console.log("found next non-viewed post");
+						foundNextNonViewed = true;
+						sgItems[i].click();
+						break;
+					}	
+				}
+			}
+			
+			if (!foundNextNonViewed) //If no suitable non-viewed post was found: click the last element.
+				sgItems[sgItems.length - 1].click();
+		}
+		else //If skipping viewed posts is disabled: click the next button.
+			document.getElementsByClassName("btn btn-action navNext")[0].click();
+	}
 	else 
 		document.getElementsByClassName("btn navPrev icon icon-arrow-left")[0].click();
 }
