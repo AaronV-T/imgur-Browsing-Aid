@@ -23,11 +23,11 @@
 			"js": ["jquery-2.1.4.min.js", "contentScripts/systemMessagesContent.js", "contentScripts/notificationsContent.js", "contentScripts/overCapacityContent.js", "contentScripts/snakeContent.js"]
 		},
 		{
-			"matches": ["*://imgur.com/", "*://*.imgur.com/r/*"],
+			"matches": ["*://imgur.com/", "*://*.imgur.com/r/*", "*://imgur.com/hot/*", "*://imgur.com/new/*", "*://imgur.com/topic/*"],
 			"js": ["contentScripts/frontPageContent.js"]
 		},
 		{
-			"matches": ["*://*.imgur.com/gallery/*", "*://*.imgur.com/*/favorites/*", "*://*.imgur.com/a/*", "*://*.imgur.com/r/*/*"],
+			"matches": ["*://*.imgur.com/gallery/*", "*://*.imgur.com/*/favorites/*", "*://*.imgur.com/a/*", "*://*.imgur.com/r/*/*", "*://imgur.com/topic/*/*"],
 			"js": ["contentScripts/imgurContent.js"]
 		},
 

@@ -211,7 +211,7 @@ function onNewPost() {
 			startIndex = currentURL.indexOf("/favorites/") + 11;
 		else if (currentURL.indexOf("imgur.com/a/") > -1)
 			startIndex = currentURL.indexOf("imgur.com/a/") + 12;
-		else if (currentURL.indexOf("imgur.com/r/") > -1) {
+		else if (currentURL.indexOf("imgur.com/r/") > -1 || currentURL.indexOf("imgur.com/topic/") > -1) {
 			startIndex = currentURL.lastIndexOf("/") + 1;
 		}
 		
@@ -829,7 +829,7 @@ function skipPost() {
 	if (rightTrueLeftFalse){
 		if (skipViewed) { //If skipping viewed posts is enabled: find the next non-viewed/non-downvoted post and click it.
 			var sgItems = document.getElementsByClassName("sg-item grid");
-			var foundCurrentSgItem = false;
+			var foundCurrentSgItem = false, foundNextNonViewed = false;
 			for (i = 0; i < sgItems.length; i++) {
 				console.log("searching sg item");
 				if (!foundCurrentSgItem) {
@@ -839,11 +839,15 @@ function skipPost() {
 				else {
 					if (sgItems[i].getElementsByClassName("alreadyViewedIdentifier").length == 0 && sgItems[i].getElementsByClassName("sg-item-vote icon-downvote").length == 0) {
 						console.log("found next non-viewed post");
+						foundNextNonViewed = true;
 						sgItems[i].click();
 						break;
 					}	
 				}
 			}
+			
+			if (!foundNextNonViewed) //If no suitable non-viewed post was found: click the last element.
+				sgItems[sgItems.length - 1].click();
 		}
 		else //If skipping viewed posts is disabled: click the next button.
 			document.getElementsByClassName("btn btn-action navNext")[0].click();
