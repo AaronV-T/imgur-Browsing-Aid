@@ -51,7 +51,7 @@ function addNotification(reasonGiven, descriptionGiven) {
 	
 	var closeNotificationButton = document.createElement("span");
 	closeNotificationButton.innerHTML = "Close";
-	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top:0;right:0;color:#4E76C9;");
+	closeNotificationButton.setAttribute("style", "cursor:pointer;position:absolute;top:.2em;right:.2em;color:#4E76C9;");
 	closeNotificationButton.addEventListener("click", closeNotification);
 	notificationDiv.appendChild(closeNotificationButton);
 	
