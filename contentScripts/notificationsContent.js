@@ -65,7 +65,7 @@ function addNotification(reasonGiven, descriptionGiven) {
 		disableButton.addEventListener("click", temporarilyStopSkippingViewedPosts);
 		notificationDiv.appendChild(disableButton);
 	}
-	else if (descriptionGiven.indexOf("User is blocked:") == 0) {
+	else if (descriptionGiven.indexOf("User is blocked:") == 0 || descriptionGiven.indexOf("Post is from Reddit.") == 0 || descriptionGiven.indexOf("Post from blocked subreddit:") == 0 || descriptionGiven.indexOf("Keyword in title is blocked:") == 0) {
 		$(descTxt).css("color", "red");
 	}
 	else if (descriptionGiven === "Check the username.") {

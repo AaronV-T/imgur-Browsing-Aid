@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><title>Blocked Keywords and Subreddits | imgur Browsing Aid</title></head>
+<body>
+<h2 style="text-align:center">imgur Browsing Aid <span id="versionSpan"></span></h2>
+<div id="loadingDiv">Loading, please wait.</div>
+<div id="mainDiv" style="display:none; overflow:hidden;">
+	<div style="width:50%; float:left; text-align:center;">
+		<h2>Keywords</h2>
+		
+		<input type="text" id="blockKeywordInput" style="margin-right:10px;" maxlength="24" size="24">
+		<input type="button" value="Block Keyword" id="blockKeywordButton" style="margin-right:10px;">
+		
+		<h3 style="text-align:center;">Blocked Keywords:</h3>
+		
+		<table id="blockedKeywordsTable" style="margin:0px auto;">
+		</table>
+		<br/>
+		<div id="keywordStatus" style="color:green;"></div>
+	</div>
+	<div style="width:50%; float:left; text-align:center;">
+		<h2>Subreddits</h2>
+		
+		<label>
+			<input type="checkbox" id="blockAllSubredditsCheckbox">
+			Block all posts from Reddit.
+		</label>
+		<br/>
+		<input type="text" id="blockSubredditInput" style="margin-right:10px;" maxlength="24" size="24">
+		<input type="button" value="Block Subreddit" id="blockSubredditButton" style="margin-right:10px;">
+		
+		<h3 style="text-align:center;">Blocked Subreddits:</h3>
+		
+		<table id="blockedSubredditsTable" style="margin:0px auto;">
+		</table>
+		<br/>
+		<div id="subredditStatus" style="color:green;"></div>
+	</div>
+</div>
+
+<script src="blockedKeywords.js"></script>
+</body>
+</html>

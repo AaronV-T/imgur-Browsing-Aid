@@ -12,6 +12,7 @@ $('body').ready(function() {
 
 var skipPromoted, closeTopBar, removeViaMobileSpans, canSlideShow, slideShowTime, blockedUserList, followedUserList, favoriteCommentList;
 var notifyOnSpecialUsers, notifyOnTollski, markIconsViewed, skipViewed, viewedPostsArray;
+var blockReddit, blockedKeywordsArray, blockedSubredditsArray
 var postUser, postID;
 var rightTrueLeftFalse = true;
 var lastCommentUpdateTime = 0, lastCommentUpdateSkipped = false;
@@ -122,8 +123,14 @@ function imgurContentMain() {
 		skipViewed = items.skipViewedPostsEnabled;
 		
 		chrome.storage.local.get({
+			blockAllSubreddits: false,
+			blockedKeywords: new Array(),
+			blockedSubreddits: new Array(),
 			viewedPosts: new Array()
 		}, function(items2) {
+			blockReddit = items2.blockAllSubreddits;
+			blockedKeywordsArray = items2.blockedKeywords;
+			blockedSubredditsArray = items2.blockedSubreddits;
 			viewedPostsArray = items2.viewedPosts;
 			
 			chrome.storage.local.getBytesInUse("viewedPosts", function(bytesInUse) { console.log("viewedPosts bytesInUse: " + bytesInUse + ". length: " + items2.viewedPosts.length); });
@@ -228,9 +235,18 @@ function onNewPost() {
 		else
 			postID = "unknown";
 		
-		if (rightTrueLeftFalse) //If the user is moving forward in the gallery: check to see if post's creator is blocked, then continue to onNewPost2.
-			checkForBlockedUsers(); 
-		else //If the user is moving back in the gallery: don't bother skipping if the post creator is blocked, just continue to onNewPost2.
+		if (rightTrueLeftFalse && !isFirstPostAfterPageLoad) {//If the user is moving forward in the gallery: check to see if post should be skipped, then continue to onNewPost2 (from within the functions).
+			postSkipped = checkForBlockedKeywords();
+			
+			if (!postSkipped && postUser.length == 0 && document.getElementsByClassName("post-title-meta")[0].innerHTML.indexOf("reddit.com") > -1)
+				postSkipped = checkForBlockedSubreddits();
+			
+			if (!postSkipped)
+				checkForBlockedUsers();
+			else
+				onNewPost2(postSkipped);
+		}
+		else //If the user is moving back in the gallery: don't bother skipping the post, just continue to onNewPost2.
 			onNewPost2(postSkipped);
 	}
 }
@@ -557,6 +573,62 @@ function bookmarkPost() {
 	});
 }
 
+function checkForBlockedKeywords() {		
+	var postTitle = document.getElementsByClassName("post-title")[0].innerHTML.toLowerCase();
+	
+	for (i = 0; i < blockedKeywordsArray.length; i++) {
+		if (postTitle.indexOf(blockedKeywordsArray[i].toLowerCase()) > -1) {
+			console.log("***Post's title contains blocked keyword (" + blockedKeywordsArray[i] + "), skipping.***");
+			
+			if (blockedKeywordsArray[i].length > 16)
+				addNotification("Previous Post Skipped:", "Keyword in title is blocked: (" + blockedKeywordsArray[i].substring(0, 16) + "...)");
+			else
+				addNotification("Previous Post Skipped:", "Keyword in title is blocked: (" + blockedKeywordsArray[i] + ")");
+			
+			onNewPost2(true);
+			skipPost();
+			return true;
+		}
+	}
+	//Don't call onNewPost2 here because it will be done in either checkForBlockedSubreddits or checkForBlockedUsers.
+	return false;
+	
+}
+
+function checkForBlockedSubreddits() {
+	if (blockReddit) {
+		console.log("***Post's title is from Reddit, skipping.***");
+			
+		addNotification("Previous Post Skipped:", "Post is from Reddit.");
+		
+		onNewPost2(true);
+		skipPost();
+		return true;
+	}
+	
+	var redditURL = document.getElementsByClassName("post-title-meta")[0].getElementsByTagName("a")[0].getAttribute("href").toLowerCase();
+	redditURL = redditURL.substr(redditURL.indexOf("reddit.com/r/") + 13, redditURL.length);
+	var subredditName = redditURL.substr(0, redditURL.indexOf("/"));
+	console.log("subredditName: " + subredditName);
+	
+	for (i = 0; i < blockedSubredditsArray.length; i++) {
+		if (subredditName === blockedSubredditsArray[i].toLowerCase()) {
+			console.log("***Post's title is from blocked subreddit(" + blockedSubredditsArray[i] + "), skipping.***");
+			
+			if (blockedSubredditsArray[i].length > 16)
+				addNotification("Previous Post Skipped:", "Post from blocked subreddit: (" + blockedSubredditsArray[i].substring(0, 16) + "...)");
+			else
+				addNotification("Previous Post Skipped:", "Post from blocked subreddit: (" + blockedSubredditsArray[i] + ")");
+			
+			onNewPost2(true);
+			skipPost();
+			return true;
+		}
+	}
+	//Don't call onNewPost2 here because it will be done in checkForBlockedUsers.
+	return false;
+}
+
 //checkForBlockedUsers: Checks if post creator is blocks, skips post if user is blocked.
 function checkForBlockedUsers() {
 	console.log("Checking if user is blocked.");
@@ -573,13 +645,15 @@ function checkForBlockedUsers() {
 				for (i = 0; i < blockedUserList.length; i++) {
 					if (blockedUserList[i].toLowerCase() === postUser.toLowerCase()) {
 						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***");
+						
 						if (blockedUserList[i].length > 16)
 							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
 						else
 							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i] + ")");
-						skipPost();
+						
 						onNewPost2(true);
-						break;
+						skipPost();
+						return;//break;
 					}
 				}
 				onNewPost2(false);
@@ -595,13 +669,15 @@ function checkForBlockedUsers() {
 				for (i = 0; i < blockedUserList.length; i++) {
 					if (blockedUserList[i].toLowerCase() === postUser.toLowerCase()) {
 						console.log("***Post's creator (" + blockedUserList[i] + ") has been blocked, skipping.***");
+						
 						if (blockedUserList[i].length > 16)
 							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i].substring(0, 16) + "...)");
 						else
 							addNotification("Previous Post Skipped:", "User is blocked: (" + blockedUserList[i] + ")");
-						skipPost();
+						
 						onNewPost2(true);
-						break;
+						skipPost();
+						return;//break;
 					}
 				}
 				onNewPost2(false);
