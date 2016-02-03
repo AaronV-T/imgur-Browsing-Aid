@@ -47,54 +47,68 @@ function populateListsAndSetReady() {
 
 //addBlockedKeyword: Gets value input by user and adds it to the blockedKeywords array.
 function addBlockedKeyword() {
-	var keywordToBlock = document.getElementById("blockKeywordInput").value;
-	
-	if (keywordToBlock.length == 0)
-		return;
-	
-	//Check if keyword is already blocked.
-	for (i = 0; i < blockedKeywordArray.length; i++) {
-		if (keywordToBlock == blockedKeywordArray[i]) 
-			return;
-	}
-	
-	blockedKeywordArray.push(keywordToBlock);
-	blockedKeywordArray.sort();
-	
-	chrome.storage.local.set({
-		blockedKeywords: blockedKeywordArray
-	}, function() {
-		document.getElementById("blockKeywordInput").value = "";
-	
-		populateBlockedKeywordList();
-		updateStatusText("keyword");
-	});
+    var keywordToBlock = document.getElementById("blockKeywordInput").value;
+    
+    if (addBlockedWord(keywordToBlock, blockedKeywordArray) == 0) {
+        // Keyword was added successfully. Save to storage.
+        chrome.storage.local.set({
+                                 blockedKeywords: blockedKeywordArray
+                                 }, function() {
+                                 document.getElementById("blockKeywordInput").value = "";
+                                 
+                                 populateBlockedKeywordList();
+                                 updateStatusText("keyword");
+                                 });
+    }
 }
 
 //addBlockedSubreddit: Gets value input by user and adds it to the blockedSubreddits array.
 function addBlockedSubreddit() {
-	var subredditToBlock = document.getElementById("blockSubredditInput").value;
-	
-	if (subredditToBlock.length == 0)
-		return;
-	
-	//Check if subreddit is already blocked.
-	for (i = 0; i < blockedSubredditArray.length; i++) {
-		if (subredditToBlock == blockedSubredditArray[i]) 
-			return;
-	}
-	
-	blockedSubredditArray.push(subredditToBlock);
-	blockedSubredditArray.sort();
-	
-	chrome.storage.local.set({
-		blockedSubreddits: blockedSubredditArray
-	}, function() {
-		document.getElementById("blockSubredditInput").value = "";
-	
-		populateBlockedSubredditList();
-		updateStatusText("subreddit");
-	});
+    var subredditToBlock = document.getElementById("blockSubredditInput").value;
+    
+    if (addBlockedWord(subredditToBlock, blockedSubredditArray) == 0) {
+        // Subreddit was added successfully. Save to storage.
+        chrome.storage.local.set({
+                             blockedSubreddits: blockedSubredditArray
+                             }, function() {
+                             document.getElementById("blockSubredditInput").value = "";
+                             
+                             populateBlockedSubredditList();
+                             updateStatusText("subreddit");
+                             });
+    }
+}
+
+// Helper function for addBlockedKeyword and addBlockedSubreddit. Checks precondition (length > 0), performs binary search, pushes word if not in array.
+function addBlockedWord(wordToBlock, blockArray) {
+    if (wordToBlock.length == 0)
+        return 1; // Error code 1: No word specified.
+    
+    //Check if keyword is already blocked. Now with binary search to speed up comparisons over large arrays.
+    var bsMin = 0, bsMax = blockArray.length - 1, bsMid;
+    while (bsMax >= bsMin) {
+        bsMid = Math.floor(bsMin + ((bsMax - bsMin) / 2));
+        var comparison = blockArray[bsMid].localeCompare(wordToBlock);
+        if (comparison > 0) {
+            // Key must be in the lower subset.
+            bsMax = bsMid - 1;
+        }
+        else if (comparison < 0) {
+            // Key must be in the upper subset.
+            bsMin = bsMid + 1;
+        }
+        else {
+            // Key has been found.
+            // TODO: Highlight the key in the array for a moment so they can see it was already added.
+            // TODO: Blank out the input box.
+            return 2; // Error code 2: Key already exists in array.
+        }
+    }
+    
+    blockArray.push(wordToBlock);
+    blockArray.sort();
+    
+    return 0;
 }
 
 //blockAllSubredditsCheckboxClicked: Gets value of blockAllSubredditsCheckbox and saves to storage.
