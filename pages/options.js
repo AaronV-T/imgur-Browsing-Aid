@@ -11,71 +11,71 @@ document.getElementById("versionSpan").innerHTML = "(Version " + chrome.runtime.
 
 // Loads options from chrome.storage
 function restore_options() {
-  chrome.storage.sync.get({ //(Main settings are always stored in storage.sync.)
-    // Set defaults.
-	promotedSkipEnabled: false,
-	topBarCloseEnabled: true,
-	removeViaMobileSpansEnabled: true,
-	slideShowModeEnabled: true,
-	slideShowSecondsPerPost: 10,
-	notificationsEnabled: true,
-	specialUserNotificationEnabled: true,
-	tollskiNotificationEnabled: true,
-	viewedIconsEnabled: true,
-	skipViewedPostsEnabled: false,
-	useSynchronizedStorage: "neverSet"
-  }, function(items) {
-    document.getElementById('promotedSkipCheckbox').checked = items.promotedSkipEnabled;
-	document.getElementById('topBarCloseCheckbox').checked = items.topBarCloseEnabled;
-	document.getElementById('removeViaMobileSpansCheckbox').checked = items.removeViaMobileSpansEnabled;
-	document.getElementById('synchronizedStorageCheckbox').checked = items.useSynchronizedStorage;
-	document.getElementById('slideShowModeCheckbox').checked = items.slideShowModeEnabled;
-	document.getElementById('slideShowPostTimeTextbox').value = items.slideShowSecondsPerPost;
-	document.getElementById('notificationsCheckbox').checked = items.notificationsEnabled;
-	document.getElementById('specialUserNotificationCheckbox').checked = items.specialUserNotificationEnabled;
-	document.getElementById('tollskiNotificationCheckbox').checked = items.tollskiNotificationEnabled;
-	document.getElementById('viewedIconsCheckbox').checked = items.viewedIconsEnabled;
-	document.getElementById('skipViewedPostsCheckbox').checked = items.skipViewedPostsEnabled;
-	
-	if (items.useSynchronizedStorage == "neverSet") { //If the user just installed or just updated from < v0.4.0: convert storage to local.
-		moveStorage(true, false);
-		
-        alert("Local storage is being initialized.\n\nYou may press OK at any time to dismiss this message.");
-		
-		chrome.storage.sync.set({
-			useSynchronizedStorage: false
-		}, function() {
-			if (!chrome.runtime.lastError) { 
-				console.log("neverSet, converted.")
-				setTimeout(function() {
-					if (!moveRunning)
-						window.location.reload();
-				}, 2000);
-			}
-		});
-		
-		return;
-	}
-	else //Else: we can assume it is true or false.
-		lastSavedUseSynchronizedStorage = items.useSynchronizedStorage;
-	
-	if (lastSavedUseSynchronizedStorage) {
-		chrome.storage.sync.get({
-			blockedUsers: new Array(),
-			followedUsers: new Array()
-		}, function(items) {
-			populateListsAndSetReady(items.blockedUsers, items.followedUsers);
-		});
-	}
-	else {
-		chrome.storage.local.get({
-			blockedUsers: new Array(),
-			followedUsers: new Array()
-		}, function(items) {
-			populateListsAndSetReady(items.blockedUsers, items.followedUsers);
-		});
-	}
-  });
+	chrome.storage.sync.get({ //(Main settings are always stored in storage.sync.)
+		// Set defaults.
+		promotedSkipEnabled: false,
+		topBarCloseEnabled: true,
+		removeViaMobileSpansEnabled: true,
+		slideShowModeEnabled: true,
+		slideShowSecondsPerPost: 10,
+		notificationsEnabled: true,
+		specialUserNotificationEnabled: true,
+		tollskiNotificationEnabled: true,
+		viewedIconsEnabled: true,
+		skipViewedPostsEnabled: false,
+		useSynchronizedStorage: "neverSet"
+	}, function(items) {
+		document.getElementById('promotedSkipCheckbox').checked = items.promotedSkipEnabled;
+		document.getElementById('topBarCloseCheckbox').checked = items.topBarCloseEnabled;
+		document.getElementById('removeViaMobileSpansCheckbox').checked = items.removeViaMobileSpansEnabled;
+		document.getElementById('synchronizedStorageCheckbox').checked = items.useSynchronizedStorage;
+		document.getElementById('slideShowModeCheckbox').checked = items.slideShowModeEnabled;
+		document.getElementById('slideShowPostTimeTextbox').value = items.slideShowSecondsPerPost;
+		document.getElementById('notificationsCheckbox').checked = items.notificationsEnabled;
+		document.getElementById('specialUserNotificationCheckbox').checked = items.specialUserNotificationEnabled;
+		document.getElementById('tollskiNotificationCheckbox').checked = items.tollskiNotificationEnabled;
+		document.getElementById('viewedIconsCheckbox').checked = items.viewedIconsEnabled;
+		document.getElementById('skipViewedPostsCheckbox').checked = items.skipViewedPostsEnabled;
+
+		if (items.useSynchronizedStorage == "neverSet") { //If the user just installed or just updated from < v0.4.0: convert storage to local.
+			moveStorage(true, false);
+			
+			alert("Local storage is being initialized.\n\nYou may press OK at any time to dismiss this message.");
+			
+			chrome.storage.sync.set({
+				useSynchronizedStorage: false
+			}, function() {
+				if (!chrome.runtime.lastError) { 
+					console.log("neverSet, converted.")
+					setTimeout(function() {
+						if (!moveRunning)
+							window.location.reload();
+					}, 2000);
+				}
+			});
+			
+			return;
+		}
+		else //Else: we can assume it is true or false.
+			lastSavedUseSynchronizedStorage = items.useSynchronizedStorage;
+
+		if (lastSavedUseSynchronizedStorage) {
+			chrome.storage.sync.get({
+				blockedUsers: new Array(),
+				followedUsers: new Array()
+			}, function(items) {
+				populateListsAndSetReady(items.blockedUsers, items.followedUsers);
+			});
+		}
+		else {
+			chrome.storage.local.get({
+				blockedUsers: new Array(),
+				followedUsers: new Array()
+			}, function(items) {
+				populateListsAndSetReady(items.blockedUsers, items.followedUsers);
+			});
+		}
+	});
 }
 
 // Saves options to chrome.storage

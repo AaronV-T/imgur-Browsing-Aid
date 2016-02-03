@@ -2,6 +2,7 @@
 document.getElementById('donateSpan').addEventListener('click', openDonationPage);
 document.getElementById('snakeSpan').addEventListener('click', showSnakeGame);
 document.getElementById('openOptions').addEventListener('click', openOptions);
+document.getElementById('openBlockedKeywords').addEventListener('click', openBlockedKeywords);
 document.getElementById('openFavoriteComments').addEventListener('click', openFavoriteComments);
 document.getElementById('openBookmarkedPosts').addEventListener('click', openBookmarkedPosts);
 document.getElementById('openFeedback').addEventListener('click', openFeedback);
@@ -54,6 +55,10 @@ function getFollowedUserListAndPopulateHelper() {
 	var visitUserLinks = document.getElementsByClassName("visitUserPage");
 	for (i = 0; i < visitUserLinks.length; i++)
 		visitUserLinks[i].addEventListener("click", visitUserPage);
+}
+
+function openBlockedKeywords() {
+	chrome.tabs.create({ 'url': "chrome-extension://" + chrome.runtime.id + "/pages/blockedKeywords.html" });
 }
 
 function openDonationPage() {
