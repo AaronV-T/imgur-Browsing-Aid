@@ -52,11 +52,27 @@ function addBlockedKeyword() {
 	if (keywordToBlock.length == 0)
 		return;
 	
-	//Check if keyword is already blocked.
-	for (i = 0; i < blockedKeywordArray.length; i++) {
-		if (keywordToBlock == blockedKeywordArray[i]) 
-			return;
-	}
+    //Check if keyword is already blocked. Now with binary search to speed up comparisons over large arrays.
+    var bsMin = 0, bsMax = blockedKeywordArray.length - 1, bsMid;
+    while (bsMax >= bsMin) {
+        bsMid = Math.floor(bsMin + ((bsMax - bsMin) / 2));
+        var comparison = blockedKeywordArray[bsMid].localeCompare(keywordToBlock);
+        if (comparison > 0) {
+            // Key must be in the lower subset.
+            bsMax = bsMid - 1;
+        }
+        else if (comparison < 0) {
+            // Key must be in the upper subset.
+            bsMin = bsMid + 1;
+        }
+        else {
+            // Key has been found.
+            // TODO: Highlight the key in the array for a moment so they can see it was already added.
+            // TODO: Blank out the input box.
+            return;
+        }
+    }
+    // If we get here, the key was not found in the array.
 	
 	blockedKeywordArray.push(keywordToBlock);
 	blockedKeywordArray.sort();
