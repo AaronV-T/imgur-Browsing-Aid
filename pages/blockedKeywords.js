@@ -49,15 +49,16 @@ function populateListsAndSetReady() {
 function addBlockedKeyword() {
     var keywordToBlock = document.getElementById("blockKeywordInput").value;
     
+    // Blank out the input box.
+    document.getElementById("blockKeywordInput").value = "";
+    
     if (addBlockedWord(keywordToBlock, blockedKeywordArray) == 0) {
         // Keyword was added successfully. Save to storage.
         chrome.storage.local.set({
                                  blockedKeywords: blockedKeywordArray
                                  }, function() {
-                                 document.getElementById("blockKeywordInput").value = "";
-                                 
-                                 populateBlockedKeywordList();
-                                 updateStatusText("keyword");
+                                    populateBlockedKeywordList();
+                                    updateStatusText("keyword");
                                  });
     }
 }
@@ -66,15 +67,16 @@ function addBlockedKeyword() {
 function addBlockedSubreddit() {
     var subredditToBlock = document.getElementById("blockSubredditInput").value;
     
+    // Blank out the input box.
+    document.getElementById("blockSubredditInput").value = "";
+    
     if (addBlockedWord(subredditToBlock, blockedSubredditArray) == 0) {
         // Subreddit was added successfully. Save to storage.
         chrome.storage.local.set({
                              blockedSubreddits: blockedSubredditArray
                              }, function() {
-                             document.getElementById("blockSubredditInput").value = "";
-                             
-                             populateBlockedSubredditList();
-                             updateStatusText("subreddit");
+                                 populateBlockedSubredditList();
+                                 updateStatusText("subreddit");
                              });
     }
 }
@@ -85,10 +87,11 @@ function addBlockedWord(wordToBlock, blockArray) {
         return 1; // Error code 1: No word specified.
     
     //Check if keyword is already blocked. Now with binary search to speed up comparisons over large arrays.
-    var bsMin = 0, bsMax = blockArray.length - 1, bsMid;
+    var bsMin = 0, bsMax = blockArray.length - 1, bsMid = 0, comparison = 0;
     while (bsMax >= bsMin) {
         bsMid = Math.floor(bsMin + ((bsMax - bsMin) / 2));
-        var comparison = blockArray[bsMid].localeCompare(wordToBlock);
+        comparison = blockArray[bsMid].localeCompare(wordToBlock);
+        // console.log(wordToBlock + " vs " + blockArray[bsMid] + ": " + comparison + ". bsMax="+bsMax+", bsMid="+bsMid+", bsMin="+bsMin+".");
         if (comparison > 0) {
             // Key must be in the lower subset.
             bsMax = bsMid - 1;
@@ -100,13 +103,20 @@ function addBlockedWord(wordToBlock, blockArray) {
         else {
             // Key has been found.
             // TODO: Highlight the key in the array for a moment so they can see it was already added.
-            // TODO: Blank out the input box.
+            console.log("Key found, aborting.");
             return 2; // Error code 2: Key already exists in array.
         }
     }
     
-    blockArray.push(wordToBlock);
-    blockArray.sort();
+    // Removed push/sort in favor of insertion, since we know the position of the array that the key should go into.
+    if (comparison < 0) {
+        // Key should be at a greater index than the last tested key.
+        // This also accounts for edge case of empty array (in which case bsMid == -1).
+        blockArray.splice(bsMid+1, 0, wordToBlock);
+    } else {
+        // Key should be at the same index as the last tested key.
+        blockArray.splice(bsMid, 0, wordToBlock);
+    }
     
     return 0;
 }
