@@ -58,21 +58,20 @@ function addBlockedKeyword() {
         chrome.storage.local.set({
                                  blockedKeywords: blockedKeywordArray
                                  }, function() {
+                                    // Rewrite the blocked keyword array to reflect the update.
                                     populateBlockedKeywordList();
-                                    updateStatusText("keyword");
+                                 
+                                    // Notify the user that they need to reload Imgur for the change to take effect.
+                                    updateStatusText("keywordStatus");
                                  });
     } else if (typeof value == 'number') {
-        // Subreddit already existed in the array. Highlight it.
+        // Keyword already existed in the array. Highlight it and inform the user of what went wrong.
         populateBlockedKeywordListHighlight(value);
-        
-        // Inform the user of what went wrong.
-        updateStatusTextCustom("keyword", "That keyword has already been blocked.");
+        updateStatusTextCustom("keywordStatus", "That keyword has already been blocked.");
     } else {
-        // An error was encountered. Display it for the user.
-        updateStatusTextCustom("keyword", value);
-        
-        // Redraw the array to clear highlights.
+        // An error was encountered. Redraw the array to clear highlights and display the error for the user.
         populateBlockedKeywordList();
+        updateStatusTextCustom("keywordStatus", value);
     }
 }
 
@@ -89,21 +88,21 @@ function addBlockedSubreddit() {
         chrome.storage.local.set({
                              blockedSubreddits: blockedSubredditArray
                              }, function() {
+                                 // Rewrite the blocked subreddit array to reflect the update.
                                  populateBlockedSubredditList();
-                                 updateStatusText("subreddit");
+                                 
+                                 // Notify the user that they need to reload Imgur for the change to take effect.
+                                 updateStatusText("subredditStatus");
                              });
     } else if (typeof value == 'number') {
-        // Subreddit already existed in the array. Highlight it.
+        // Subreddit already existed in the array. Highlight it and inform the user of what went wrong.
         populateBlockedSubredditListHighlight(value);
-        
-        // Inform the user of what went wrong.
-        updateStatusTextCustom("subreddit", "That subreddit has already been blocked.");
+        updateStatusTextCustom("subredditStatus", "That subreddit has already been blocked.");
     } else {
-        // An error was encountered. Display it for the user.
-        updateStatusTextCustom("subreddit", value);
-        
-        // Redraw the array to clear highlights.
+        // An error was encountered. Redraw the array to clear highlights and display the error for the user.
         populateBlockedSubredditList();
+        updateStatusTextCustom("subredditStatus", value);
+        
     }
 }
 
@@ -113,38 +112,25 @@ function addBlockedSubreddit() {
 // If the word was successfully inserted into the array, nothing is returned.
 function addBlockedWord(wordToBlock, blockArray) {
     if (wordToBlock.length == 0)
-        return "You must specify a word to block.";
+        return "You must specify a word to block."; // Error state.
     
     //Check if keyword is already blocked. Now with binary search to speed up comparisons over large arrays.
     var bsMin = 0, bsMax = blockArray.length - 1, bsMid = 0, comparison = 0;
     while (bsMax >= bsMin) {
         bsMid = Math.floor(bsMin + ((bsMax - bsMin) / 2));
         comparison = blockArray[bsMid].localeCompare(wordToBlock);
-        // console.log(wordToBlock + " vs " + blockArray[bsMid] + ": " + comparison + ". bsMax="+bsMax+", bsMid="+bsMid+", bsMin="+bsMin+".");
-        if (comparison > 0) {
-            // Key must be in the lower subset.
-            bsMax = bsMid - 1;
-        }
-        else if (comparison < 0) {
-            // Key must be in the upper subset.
-            bsMin = bsMid + 1;
-        }
-        else {
-            // Key has been found.
-            // TODO: Highlight the key in the array for a moment so they can see it was already added.
-            return bsMid;
-        }
+        if (comparison > 0)
+            bsMax = bsMid - 1; // Key must be in the lower subset.
+        else if (comparison < 0)
+            bsMin = bsMid + 1; // Key must be in the upper subset.
+        else
+            return bsMid; // Key has been found. Return its index for highlighting.
     }
     
-    // Removed push/sort in favor of insertion, since we know the position of the array that the key should go into.
-    if (comparison < 0) {
-        // Key should be at a greater index than the last tested key.
-        // This also accounts for edge case of empty array (in which case bsMid == -1).
-        blockArray.splice(bsMid+1, 0, wordToBlock);
-    } else {
-        // Key should be at the same index as the last tested key.
-        blockArray.splice(bsMid, 0, wordToBlock);
-    }
+    if (comparison < 0)
+        blockArray.splice(bsMid+1, 0, wordToBlock); // Key should be at a greater index than the last tested key.
+    else
+        blockArray.splice(bsMid, 0, wordToBlock); // Key should be at the same index as the last tested key.
     
     return; // Success: Word inserted in array.
 }
@@ -156,7 +142,7 @@ function blockAllSubredditsCheckboxClicked() {
 	chrome.storage.local.set({
 		blockAllSubreddits: blockAll
 	}, function() {
-		updateStatusText("subreddit");
+		updateStatusText("subredditStatus");
 	});
 }
 
@@ -222,7 +208,7 @@ function unblockKeyword() {
 		blockedKeywords: blockedKeywordArray
 	}, function() {
 		populateBlockedKeywordList();
-		updateStatusText("keyword");
+		updateStatusText("keywordStatus");
 	});
 }
 
@@ -238,42 +224,33 @@ function unblockSubreddit() {
 		blockedSubreddits: blockedSubredditArray
 	}, function() {
 		populateBlockedSubredditList();
-		updateStatusText("subreddit");
+		updateStatusText("subredditStatus");
 	});
 }
 
 // Displays the "Please refresh" message in the selected text box.
-function updateStatusText(type) {
-    updateStatusTextCustom(type, "Please refresh any open Imgur pages for changes to go into effect.");
+function updateStatusText(field) {
+    updateStatusTextCustom(field, "Please refresh any open Imgur pages for changes to go into effect.");
 }
 
 // Performs the same function as updateStatusText, but allows custom text to be inserted.
-function updateStatusTextCustom(type, customText) {
+function updateStatusTextCustom(field, customText) {
     var status;
-    if (type == "keyword") {
-        status = document.getElementById('keywordStatus');
+    
+    status = document.getElementById(field);
         
-        status.textContent = customText;
-        
+    status.textContent = customText;
+    
+    if (field == "keywordStatus") {
         if (disableKeywordStatus)
             clearTimeout(disableKeywordStatus);
         
-        disableKeywordStatus = setTimeout(function() {
-                                          status.textContent = '';
-                                          }, 3000);
+        disableKeywordStatus = setTimeout(function() { status.textContent = ''; }, 3000);
     }
-    else if (type == "subreddit") {
-        status = document.getElementById('subredditStatus');
-        
-        status.textContent = customText;
-        
+    else if (type == "subredditStatus") {
         if (disableSubredditStatus)
             clearTimeout(disableSubredditStatus);
         
-        disableSubredditStatus = setTimeout(function() {
-                                            status.textContent = '';
-                                            }, 3000);
+        disableSubredditStatus = setTimeout(function() { status.textContent = ''; }, 3000);
     }
-    else
-        return;
 }
