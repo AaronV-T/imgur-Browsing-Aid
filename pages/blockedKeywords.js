@@ -48,11 +48,12 @@ function populateListsAndSetReady() {
 //addBlockedKeyword: Gets value input by user and adds it to the blockedKeywords array.
 function addBlockedKeyword() {
     var keywordToBlock = document.getElementById("blockKeywordInput").value;
+    var result;
     
     // Blank out the input box.
     document.getElementById("blockKeywordInput").value = "";
     
-    if (addBlockedWord(keywordToBlock, blockedKeywordArray) == 0) {
+    if (typeof (value = addBlockedWord(keywordToBlock, blockedKeywordArray)) == 'undefined') {
         // Keyword was added successfully. Save to storage.
         chrome.storage.local.set({
                                  blockedKeywords: blockedKeywordArray
@@ -60,17 +61,30 @@ function addBlockedKeyword() {
                                     populateBlockedKeywordList();
                                     updateStatusText("keyword");
                                  });
+    } else if (typeof value == 'number') {
+        // Subreddit already existed in the array. Highlight it.
+        populateBlockedKeywordListHighlight(value);
+        
+        // Inform the user of what went wrong.
+        updateStatusTextCustom("keyword", "That keyword has already been blocked.");
+    } else {
+        // An error was encountered. Display it for the user.
+        updateStatusTextCustom("keyword", value);
+        
+        // Redraw the array to clear highlights.
+        populateBlockedKeywordList();
     }
 }
 
 //addBlockedSubreddit: Gets value input by user and adds it to the blockedSubreddits array.
 function addBlockedSubreddit() {
     var subredditToBlock = document.getElementById("blockSubredditInput").value;
+    var index;
     
     // Blank out the input box.
     document.getElementById("blockSubredditInput").value = "";
     
-    if (addBlockedWord(subredditToBlock, blockedSubredditArray) == 0) {
+    if (typeof (value = addBlockedWord(subredditToBlock, blockedSubredditArray)) == 'undefined') {
         // Subreddit was added successfully. Save to storage.
         chrome.storage.local.set({
                              blockedSubreddits: blockedSubredditArray
@@ -78,13 +92,28 @@ function addBlockedSubreddit() {
                                  populateBlockedSubredditList();
                                  updateStatusText("subreddit");
                              });
+    } else if (typeof value == 'number') {
+        // Subreddit already existed in the array. Highlight it.
+        populateBlockedSubredditListHighlight(value);
+        
+        // Inform the user of what went wrong.
+        updateStatusTextCustom("subreddit", "That subreddit has already been blocked.");
+    } else {
+        // An error was encountered. Display it for the user.
+        updateStatusTextCustom("subreddit", value);
+        
+        // Redraw the array to clear highlights.
+        populateBlockedSubredditList();
     }
 }
 
 // Helper function for addBlockedKeyword and addBlockedSubreddit. Checks precondition (length > 0), performs binary search, pushes word if not in array.
+// If an error condition was encountered, a string describing the error is returned.
+// If the word was found in the array, the index of the word is returned.
+// If the word was successfully inserted into the array, nothing is returned.
 function addBlockedWord(wordToBlock, blockArray) {
     if (wordToBlock.length == 0)
-        return 1; // Error code 1: No word specified.
+        return "You must specify a word to block.";
     
     //Check if keyword is already blocked. Now with binary search to speed up comparisons over large arrays.
     var bsMin = 0, bsMax = blockArray.length - 1, bsMid = 0, comparison = 0;
@@ -103,8 +132,7 @@ function addBlockedWord(wordToBlock, blockArray) {
         else {
             // Key has been found.
             // TODO: Highlight the key in the array for a moment so they can see it was already added.
-            console.log("Key found, aborting.");
-            return 2; // Error code 2: Key already exists in array.
+            return bsMid;
         }
     }
     
@@ -118,7 +146,7 @@ function addBlockedWord(wordToBlock, blockArray) {
         blockArray.splice(bsMid, 0, wordToBlock);
     }
     
-    return 0;
+    return; // Success: Word inserted in array.
 }
 
 //blockAllSubredditsCheckboxClicked: Gets value of blockAllSubredditsCheckbox and saves to storage.
@@ -134,30 +162,52 @@ function blockAllSubredditsCheckboxClicked() {
 
 //populateBlockedKeywordList: Displays all the blocked keywords and adds buttons to unblock them.
 function populateBlockedKeywordList() {
-	var listHTML = "";
-	
-	for (i = 0; i < blockedKeywordArray.length; i++) 
-		listHTML += '<tr><td>' + blockedKeywordArray[i] + '</td><td><input type="button" value="Unblock" id="removeKeyword' + i + '" keyword="' + blockedKeywordArray[i] + '" /></td></tr>';
-	
-	document.getElementById("blockedKeywordsTable").innerHTML = listHTML;
-	
-	for (i = 0; i < blockedKeywordArray.length; i++) {
-		document.getElementById("removeKeyword" + i).addEventListener("click", unblockKeyword);
-	}
+    populateBlockedKeywordListHighlight(-1);
 }
 
-//populateBlockedSubredditList: Displays all the blocked subreddits and adds buttons to unblock them.
+//populateBlockedSubredditListHighlight: Displays all the blocked subreddits and adds buttons to unblock them.
 function populateBlockedSubredditList() {
-	var listHTML = "";
-	
-	for (i = 0; i < blockedSubredditArray.length; i++) 
-		listHTML += '<tr><td>' + blockedSubredditArray[i] + '</td><td><input type="button" value="Unblock" id="removeSubreddit' + i + '" subreddit="' + blockedSubredditArray[i] + '" /></td></tr>';
-	
-	document.getElementById("blockedSubredditsTable").innerHTML = listHTML;
-	
-	for (i = 0; i < blockedSubredditArray.length; i++) {
-		document.getElementById("removeSubreddit" + i).addEventListener("click", unblockSubreddit);
-	}
+    populateBlockedSubredditListHighlight(-1);
+}
+
+//populateBlockedKeywordListHighlight: Displays all the blocked keywords and adds buttons to unblock them. Highlights the entry at the given index.
+function populateBlockedKeywordListHighlight(index) {
+    var listHTML = "";
+    
+    for (i = 0; i < blockedKeywordArray.length; i++) {
+        if (i == index) {
+            // TODO: Instead of a static highlight, make this a red pulse that fades back to black.
+            listHTML += '<tr><td><font color = "ff0000">' + blockedKeywordArray[i] + '</font></td><td><input type="button" value="Unblock" id="removeKeyword' + i + '" keyword="' + blockedKeywordArray[i] + '" /></td></tr>';
+        } else {
+            listHTML += '<tr><td>' + blockedKeywordArray[i] + '</td><td><input type="button" value="Unblock" id="removeKeyword' + i + '" keyword="' + blockedKeywordArray[i] + '" /></td></tr>';
+        }
+    }
+    
+    document.getElementById("blockedKeywordsTable").innerHTML = listHTML;
+    
+    for (i = 0; i < blockedKeywordArray.length; i++) {
+        document.getElementById("removeKeyword" + i).addEventListener("click", unblockKeyword);
+    }
+}
+
+//populateBlockedSubredditListHighlight: Displays all the blocked subreddits and adds buttons to unblock them. Highlights the entry at the given index.
+function populateBlockedSubredditListHighlight(index) {
+    var listHTML = "";
+    
+    for (i = 0; i < blockedSubredditArray.length; i++) {
+        if (i == index) {
+            // TODO: Instead of a static highlight, make this a red pulse that fades back to black.
+            listHTML += '<tr><td><font color = "ff0000">' + blockedSubredditArray[i] + '</font></td><td><input type="button" value="Unblock" id="removeSubreddit' + i + '" subreddit="' + blockedSubredditArray[i] + '" /></td></tr>';
+        } else {
+            listHTML += '<tr><td>' + blockedSubredditArray[i] + '</td><td><input type="button" value="Unblock" id="removeSubreddit' + i + '" subreddit="' + blockedSubredditArray[i] + '" /></td></tr>';
+        }
+    }
+    
+    document.getElementById("blockedSubredditsTable").innerHTML = listHTML;
+    
+    for (i = 0; i < blockedSubredditArray.length; i++) {
+        document.getElementById("removeSubreddit" + i).addEventListener("click", unblockSubreddit);
+    }
 }
 
 //unblockKeyword: Removes keyword from blockedKeywords array.
@@ -192,32 +242,38 @@ function unblockSubreddit() {
 	});
 }
 
+// Displays the "Please refresh" message in the selected text box.
 function updateStatusText(type) {
-	var status;
-	if (type == "keyword") {
-		status = document.getElementById('keywordStatus');
-		
-		status.textContent = "Please refresh any open Imgur pages for changes to go into effect.";
-		
-		if (disableKeywordStatus)
-		clearTimeout(disableKeywordStatus);
-	
-		disableKeywordStatus = setTimeout(function() {
-			status.textContent = '';
-		}, 3000);
-	}
-	else if (type == "subreddit") {
-		status = document.getElementById('subredditStatus');
-		
-		status.textContent = "Please refresh any open Imgur pages for changes to go into effect.";
-		
-		if (disableSubredditStatus)
-		clearTimeout(disableSubredditStatus);
-	
-		disableSubredditStatus = setTimeout(function() {
-			status.textContent = '';
-		}, 3000);
-	}
-	else
-		return;
+    updateStatusTextCustom(type, "Please refresh any open Imgur pages for changes to go into effect.");
+}
+
+// Performs the same function as updateStatusText, but allows custom text to be inserted.
+function updateStatusTextCustom(type, customText) {
+    var status;
+    if (type == "keyword") {
+        status = document.getElementById('keywordStatus');
+        
+        status.textContent = customText;
+        
+        if (disableKeywordStatus)
+            clearTimeout(disableKeywordStatus);
+        
+        disableKeywordStatus = setTimeout(function() {
+                                          status.textContent = '';
+                                          }, 3000);
+    }
+    else if (type == "subreddit") {
+        status = document.getElementById('subredditStatus');
+        
+        status.textContent = customText;
+        
+        if (disableSubredditStatus)
+            clearTimeout(disableSubredditStatus);
+        
+        disableSubredditStatus = setTimeout(function() {
+                                            status.textContent = '';
+                                            }, 3000);
+    }
+    else
+        return;
 }
