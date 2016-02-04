@@ -228,7 +228,7 @@ function unblockSubreddit() {
 	});
 }
 
-// Displays the "Please refresh" message in the selected text box.
+// Displays the "Please refresh" message in the element with id matching 'field' parameter.
 function updateStatusText(field) {
     updateStatusTextCustom(field, "Please refresh any open Imgur pages for changes to go into effect.");
 }
