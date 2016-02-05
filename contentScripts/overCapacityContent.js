@@ -15,7 +15,8 @@ var overCapacityViews, overCapacityDate;
 function loadOverCapacityContent() {
 	chrome.storage.sync.get({
 		overCapacityPageViews: 0,
-		overCapacityCountDate: "neverSet"
+		overCapacityCountDate: "neverSet",
+        snakeGameEnabled: true
 	}, function (items) {
 		overCapacityViews = items.overCapacityPageViews;
 		overCapacityDate = items.overCapacityCountDate;
@@ -48,7 +49,7 @@ function loadOverCapacityContent() {
 			addNotification("FYI:", "You have seen the over capacity page " + overCapacityViews + " times since " + overCapacityDate + "."); //Call function in notificationsContent.js
 		});
 		
-		if (!document.getElementById("snakeGameDiv"))
+		if (snakeGameEnabled && !document.getElementById("snakeGameDiv"))
 			initializeSnakeGame(); //Call function in snakeContent.js
 	});
 }

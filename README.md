@@ -9,6 +9,7 @@ Feature List:
 * Block users to auto-skip their posts in the gallery.
 * Slideshow mode.
 * Auto-skip posts you've already viewed.
+* Auto-skip posts containing user-defined keywords and subreddits.
 * Remove the "via Android" and "via iPhone" links in comments.
 * Auto-close the top notification bar.
 * Receive notifications on special users' posts.
