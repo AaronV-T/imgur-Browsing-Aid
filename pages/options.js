@@ -23,7 +23,8 @@ function restore_options() {
 		tollskiNotificationEnabled: true,
 		viewedIconsEnabled: true,
 		skipViewedPostsEnabled: false,
-		useSynchronizedStorage: "neverSet"
+		useSynchronizedStorage: "neverSet",
+        snakeGameEnabled: true
 	}, function(items) {
 		document.getElementById('promotedSkipCheckbox').checked = items.promotedSkipEnabled;
 		document.getElementById('topBarCloseCheckbox').checked = items.topBarCloseEnabled;
@@ -36,6 +37,7 @@ function restore_options() {
 		document.getElementById('tollskiNotificationCheckbox').checked = items.tollskiNotificationEnabled;
 		document.getElementById('viewedIconsCheckbox').checked = items.viewedIconsEnabled;
 		document.getElementById('skipViewedPostsCheckbox').checked = items.skipViewedPostsEnabled;
+        document.getElementById('snakeGameCheckbox').checked = items.snakeGameEnabled;
 
 		if (items.useSynchronizedStorage == "neverSet") { //If the user just installed or just updated from < v0.4.0: convert storage to local.
 			moveStorage(true, false);
@@ -97,8 +99,9 @@ function save_options() {
 	var useNotifications = document.getElementById('notificationsCheckbox').checked;
 	var specialUserNotify = document.getElementById('specialUserNotificationCheckbox').checked;
 	var tollskiNotify = document.getElementById('tollskiNotificationCheckbox').checked;
-	var viewedIcons = document.getElementById('viewedIconsCheckbox').checked
+    var viewedIcons = document.getElementById('viewedIconsCheckbox').checked;
 	var skipViewed = document.getElementById('skipViewedPostsCheckbox').checked;
+    var snakeGame = document.getElementById('snakeGameCheckbox').checked;
 	
 	if (useSync != lastSavedUseSynchronizedStorage) { //If the user changed their sync setting...
 		if (useSync) { //If they selected to use storage.sync: prompt for confirmation.
@@ -122,7 +125,8 @@ function save_options() {
 		specialUserNotificationEnabled: specialUserNotify,
 		tollskiNotificationEnabled: tollskiNotify,
 		viewedIconsEnabled: viewedIcons,
-		skipViewedPostsEnabled: skipViewed
+		skipViewedPostsEnabled: skipViewed,
+        snakeGameEnabled: snakeGame
 	}, function() {
 		if (chrome.runtime.lastError) { 
 			updateStatusText("Error: Something went wrong when trying to save.", false);
