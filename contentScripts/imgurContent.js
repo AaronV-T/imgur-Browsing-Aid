@@ -77,8 +77,10 @@ $(function() { //Keydown listener
 				slideShowPauseToggle();
 		}
 		else if (e.which == 120) { //'F9' key
-			if (window.location.href.indexOf("imgur.com/account/favorites/") > -1) //Don't skip already viewed images when browsing your own favorites list.
+            if (window.location.href.indexOf("imgur.com/account/favorites/") > -1) { //Don't skip already viewed images when browsing your own favorites list.
+                addNotification("Notification:", "Skipping of viewed posts not available when browsing your own favorites.");
 				return;
+            }
 		
 			if (skipViewed)
 				addNotification("Notification:", "Skipping of viewed posts has been temporarily disabled. Press 'F9' to re-enable."); //Call function in notificationsContent.js
