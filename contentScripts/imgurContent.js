@@ -18,6 +18,7 @@ var rightTrueLeftFalse = true;
 var lastCommentUpdateTime = 0, lastCommentUpdateSkipped = false;
 var slideShowInterval, slideShowRunning = false, slideShowPaused = false, slideShowSecondsRemaining;
 var isFirstPostAfterPageLoad;
+var clickingBecauseSkipping = false;
 
 //Create a MutationObserver to check for changes on the page.
 var mutationObserver = new MutationObserver( function(mutations) {
@@ -159,7 +160,7 @@ function imgurContentMain() {
 			
 			document.getElementsByClassName("btn btn-action navNext")[0].addEventListener("click", movedForward);
 			document.getElementsByClassName("btn navPrev icon icon-arrow-left")[0].addEventListener("click", movedBack);
-			document.getElementById("side-gallery").addEventListener("click", movedBack); //If a thumbnail was clicked: treat it like the user moved back in the gallery.
+			document.getElementById("side-gallery").addEventListener("click", sideGalleryClicked); //If a thumbnail was clicked: treat it like the user moved back in the gallery.
 			
 			var checkCount = 0;
 			var checkThumbnails = setInterval(function() { //Check if the thumbnails have loaded once every 500ms (max 60 checks). If they have loaded: add the viewed icons.
@@ -633,7 +634,7 @@ function checkForBlockedSubreddits() {
 
 //checkForBlockedUsers: Checks if post creator is blocks, skips post if user is blocked.
 function checkForBlockedUsers() {
-	console.log("Checking if user is blocked.");
+	console.log("Checking if user(" + postUser + ") is blocked.");
 	chrome.storage.sync.get({ 
 		useSynchronizedStorage: false
 	}, function(items) {
@@ -691,7 +692,7 @@ function checkForBlockedUsers() {
 //checkForSpecialUsers: Checks if the post's creator is a "special" user, notifies if true.
 function checkForSpecialUsers() {
 	if (notifyOnSpecialUsers) {
-		if (postUser.toLowerCase().indexOf("michaelcera") > -1 && postUser.toLowerCase().indexOf("photoshopped") > -1)
+		if (postUser === "ANewBadlyPhotoshoppedPhotoofMichaelCeraEveryday")
 			addNotification("Tip:", "Check the username."); //Call function in notificationsContent.js
 	}
 
@@ -902,25 +903,50 @@ function removeViaElements() {
 	
 }
 
+//sideGalleryClicked: Runs when a thumbnail in the side gallery has been clicked. Determines if we need to move forward or backward in the gallery.
+function sideGalleryClicked() {
+	if (clickingBecauseSkipping) {
+		clickingBecauseSkipping = false;
+		movedForward();
+	}
+	else
+		movedBack();
+}
+
 //skipPost: Skips current post.
 function skipPost() {
 	if (rightTrueLeftFalse){
+		//Variables for debugging.
+		var postsSkipped = 1; //Variable to count how many posts will be skipped.
+		var postIDsSkipped = postID; //Track the IDs skipped.
+		
 		if (skipViewed) { //If skipping viewed posts is enabled: find the next non-viewed/non-downvoted post and click it.
 			var sgItems = document.getElementsByClassName("sg-item grid");
 			var foundCurrentSgItem = false, foundNextNonViewed = false;
 			for (i = 0; i < sgItems.length; i++) {
-				console.log("searching sg item");
+				//console.log("searching sg item");
 				if (!foundCurrentSgItem) {
 					if (sgItems[i].className == "sg-item selected grid")
 						foundCurrentSgItem = true;
 				}
-				else {
-					if (sgItems[i].getElementsByClassName("alreadyViewedIdentifier").length == 0 && sgItems[i].getElementsByClassName("sg-item-vote icon-downvote").length == 0) {
+				else {				
+					if (sgItems[i].getElementsByClassName("alreadyViewedIdentifier").length == 0 && sgItems[i].getElementsByClassName("sg-item-vote icon-downvote").length == 0) { //If the thumbnail hasn't already been viewed and hasn't been downvoted: ...
 						console.log("found next non-viewed post");
 						foundNextNonViewed = true;
+						clickingBecauseSkipping = true;
 						sgItems[i].click();
 						break;
-					}	
+					}
+					else {
+						postsSkipped++;
+						var startIndex;
+						if (sgItems[i].getAttribute("href").indexOf("/a/") == 0)
+							startIndex = 3;
+						else
+							startIndex = 1;
+						
+						postIDsSkipped += ", " + sgItems[i].getAttribute("href").substring(startIndex, sgItems[i].getAttribute("href").length);
+					}
 				}
 			}
 			
@@ -929,6 +955,8 @@ function skipPost() {
 		}
 		else //If skipping viewed posts is disabled: click the next button.
 			document.getElementsByClassName("btn btn-action navNext")[0].click();
+			
+		console.log("Posts skipped: " + postsSkipped + ". (IDs: " + postIDsSkipped +")");
 	}
 	else 
 		document.getElementsByClassName("btn navPrev icon icon-arrow-left")[0].click();
