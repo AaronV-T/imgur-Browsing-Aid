@@ -27,7 +27,7 @@ var mutationObserver = new MutationObserver( function(mutations) {
 		for(var j=0; j < mut.addedNodes.length; ++j){
 			//console.log(mut.addedNodes[j].className + " ::: " + mut.addedNodes[j].nodeName);
 			if(mut.addedNodes[j].className === undefined) continue;
-			else if(mut.addedNodes[j].className.indexOf("views-info left") >-1 ) {
+			else if(mut.addedNodes[j].className.indexOf("humanMsg") >-1 ) {
 				if (isFirstPostAfterPageLoad)
 					isFirstPostAfterPageLoad = false;
 				setTimeout(function() {
@@ -141,13 +141,13 @@ function imgurContentMain() {
 			if (closeTopBar)
 			checkForTopBarAndClose();
 	
-			addBookmarkButton();
+			/*addBookmarkButton();
 			addFollowButton();
 			addBlockButton();
 			if (canSlideShow)
 				addToggleSlideShowButton();
 			if (skipViewed)
-				addViewedTexts();
+				addViewedTexts();*/
 			
 			//Give style to our added buttons and other elements.
 			var buttonHoverCss = ".addedPostOptionDiv:hover { background-color:#E8E7E6; } .favorite-comment:hover { background-color:#E8E7E6; } .alreadyViewedIdentifier { position:absolute;z-index:1;top:1px;right:1px;background-color:rgba(0,0,0,0.5);color:white;font-weight:bold; }";
@@ -259,6 +259,12 @@ function onNewPost2(postSkipped) {
 	if (!postSkipped && skipViewed && !isFirstPostAfterPageLoad && rightTrueLeftFalse) 
 		postSkipped = checkIfViewedPost();
 	
+	
+	addBookmarkButton();
+	addFollowButton();
+	addBlockButton();
+	if (canSlideShow)
+		addToggleSlideShowButton();
 	if (markIconsViewed && !isFirstPostAfterPageLoad)
 		addViewedTexts();
 	
@@ -279,6 +285,8 @@ function onNewPost2(postSkipped) {
 		
 	if (!postSkipped)
 		checkForSpecialUsers();
+	
+	onCommentsLoaded();
 }
 
 /*
@@ -289,14 +297,16 @@ function onNewPost2(postSkipped) {
 
 //addBlockButton: Adds block user button to post options.
 function addBlockButton() {
-	var blockPosterDiv = document.createElement("div");
-	blockPosterDiv.setAttribute("style", "text-align:center");
-	blockPosterDiv.setAttribute("id", "block-poster");
-	blockPosterDiv.setAttribute("class", "addedPostOptionDiv");
+	//var blockPosterDiv = document.createElement("div");
+	var blockPosterElem = document.createElement("li");
+	blockPosterElem.setAttribute("style", "text-align:center");
+	blockPosterElem.setAttribute("id", "block-poster");
+	blockPosterElem.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("block user");
-	blockPosterDiv.appendChild(textNode);
-	document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(blockPosterDiv);
+	blockPosterElem.appendChild(textNode);
+	//document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(blockPosterDiv);
+	document.getElementsByClassName("post-action-options-items")[0].appendChild(blockPosterElem);
 	
 	document.getElementById("block-poster").addEventListener("click", function() {
 		window.postMessage({ type: "FROM_PAGE", text: "block user:" + postUser }, "*");
@@ -305,16 +315,18 @@ function addBlockButton() {
 
 //addBookmarkButton: Adds bookmark post button to post options.
 function addBookmarkButton() {
-	var bookmarkPostDiv = document.createElement("div");
-	bookmarkPostDiv.setAttribute("style", "text-align:center;");
-	bookmarkPostDiv.setAttribute("id", "bookmark-post");
-	bookmarkPostDiv.setAttribute("class", "addedPostOptionDiv");
+	//var bookmarkPostDiv = document.createElement("div");
+	var bookmarkPostElement = document.createElement("li");
+	bookmarkPostElement.setAttribute("style", "text-align:center;");
+	bookmarkPostElement.setAttribute("id", "bookmark-post");
+	bookmarkPostElement.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("bookmark post");
-	bookmarkPostDiv.appendChild(textNode);
-	document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(bookmarkPostDiv);
+	bookmarkPostElement.appendChild(textNode);
+	//document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(bookmarkPostDiv);
+	document.getElementsByClassName("post-action-options-items")[0].appendChild(bookmarkPostElement);
 	
-	bookmarkPostDiv.addEventListener('click', bookmarkPost);
+	bookmarkPostElement.addEventListener('click', bookmarkPost);
 }
 
 //addFavoriteCommentButtons: Removes any existing favorite comment buttons and adds a favorite comment button to each visible comment.
@@ -332,7 +344,7 @@ function addFavoriteCommentButtons() {
 		var textNode = document.createTextNode("favorite");
 		favoriteCommentDiv.appendChild(textNode);
 		//console.log("added favorite comment button");
-		commentOptionsButtons[i].getElementsByClassName("options")[0].appendChild(favoriteCommentDiv);
+		commentOptionsButtons[i].getElementsByClassName("options")[0].firstChild.appendChild(favoriteCommentDiv);
 	}
 	
 	var favoriteCommentDivs = document.getElementsByClassName("favorite-comment");
@@ -342,14 +354,16 @@ function addFavoriteCommentButtons() {
 
 //addFollowButton: Adds follow user button to post options.
 function addFollowButton() {
-	var followPosterDiv = document.createElement("div");
-	followPosterDiv.setAttribute("style", "text-align:center;");
-	followPosterDiv.setAttribute("id", "follow-poster");
-	followPosterDiv.setAttribute("class", "addedPostOptionDiv");
+	//var followPosterDiv = document.createElement("div");
+	var followPosterElem = document.createElement("li");
+	followPosterElem.setAttribute("style", "text-align:center;");
+	followPosterElem.setAttribute("id", "follow-poster");
+	followPosterElem.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("follow user");
-	followPosterDiv.appendChild(textNode);
-	document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(followPosterDiv);
+	followPosterElem.appendChild(textNode);
+	//document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(followPosterDiv);
+	document.getElementsByClassName("post-action-options-items")[0].appendChild(followPosterElem);
 	
 	document.getElementById("follow-poster").addEventListener("click", function() {
 		window.postMessage({ type: "FROM_PAGE", text: "follow user:" + postUser }, "*");
@@ -358,16 +372,18 @@ function addFollowButton() {
 
 //addToggleSlideShowButton: Adds slide show toggle button to post options.
 function addToggleSlideShowButton() {
-	var slideShowToggleDiv = document.createElement("div");
-	slideShowToggleDiv.setAttribute("style", "text-align:center;");
-	slideShowToggleDiv.setAttribute("id", "follow-poster");
-	slideShowToggleDiv.setAttribute("class", "addedPostOptionDiv");
+	//var slideShowToggleDiv = document.createElement("div");
+	var slideShowToggleElem = document.createElement("li");
+	slideShowToggleElem.setAttribute("style", "text-align:center;");
+	slideShowToggleElem.setAttribute("id", "follow-poster");
+	slideShowToggleElem.setAttribute("class", "addedPostOptionDiv");
 	
 	var textNode = document.createTextNode("toggle slideshow");
-	slideShowToggleDiv.appendChild(textNode);
-	document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(slideShowToggleDiv);
+	slideShowToggleElem.appendChild(textNode);
+	//document.getElementById("options-btn").getElementsByClassName("options")[0].appendChild(slideShowToggleDiv);
+	document.getElementsByClassName("post-action-options-items")[0].appendChild(slideShowToggleElem);
 	
-	slideShowToggleDiv.addEventListener("click", slideShowToggle);
+	slideShowToggleElem.addEventListener("click", slideShowToggle);
 }
 
 
@@ -464,7 +480,7 @@ function bookmarkPost() {
 	var bookmarkedImg = {
 		id: postID, //document.getElementsByClassName("post-image-container")[0].getAttribute("id"),
 		imgSrc: document.getElementsByClassName("sg-item selected grid")[0].getAttribute("style").substring(shortUrlStartIndex, shortUrlEndIndex),
-		title: document.getElementsByClassName("post-title font-opensans-bold")[0].innerHTML.substring(0, titleCutoffIndex),
+		title: document.getElementsByClassName("post-title")[0].innerHTML.substring(0, titleCutoffIndex),
 		directory: "root"
 	}
 	
@@ -740,11 +756,11 @@ function checkIfViewedPost() {
 
 //favoriteComment: Adds comment to favoriteComments.
 function favoriteComment() {
-	var superParent = this.parentNode.parentNode.parentNode.parentNode;
-	
+	var superParent = this.parentNode.parentNode.parentNode.parentNode.parentNode;
+
 	var commentText = "";
-	for (i = 0; i < superParent.getElementsByTagName("p")[0].childNodes.length; i++) //Add the innerHTML of each childNode to commentText.
-		commentText += superParent.getElementsByTagName("p")[0].childNodes[i].innerHTML;
+	for (i = 0; i < superParent.childNodes[1].childNodes.length; i++) //Add the innerHTML of each childNode to commentText.
+		commentText += superParent.childNodes[1].childNodes[i].innerHTML;
 	
 	console.log("https://imgur.com" + superParent.getElementsByClassName("item permalink-caption-link")[0].getAttribute("href"));
 	console.log(superParent.getElementsByClassName("author")[0].children[0].innerHTML);
@@ -896,9 +912,9 @@ function removeViaElements() {
 	var origLength = viaClassElements.length;
 	
 	//console.log("starting removal: " + origLength);
-	for (i = 0; i < origLength; i++) {
+	for (i = origLength - 1; i >=0; i--) {
 		//console.log(i + " " + origLength + " removing via: " + viaClassElements[0].parentNode.firstChild.innerHTML);
-		viaClassElements[0].parentNode.removeChild(viaClassElements[0]);
+		viaClassElements[i].parentNode.removeChild(viaClassElements[i]);
 	}
 	
 }
@@ -931,7 +947,7 @@ function skipPost() {
 				}
 				else {				
 					if (sgItems[i].getElementsByClassName("alreadyViewedIdentifier").length == 0 && sgItems[i].getElementsByClassName("sg-item-vote icon-downvote").length == 0) { //If the thumbnail hasn't already been viewed and hasn't been downvoted: ...
-						console.log("found next non-viewed post");
+						//console.log("found next non-viewed post");
 						foundNextNonViewed = true;
 						clickingBecauseSkipping = true;
 						sgItems[i].click();
@@ -950,8 +966,10 @@ function skipPost() {
 				}
 			}
 			
-			if (!foundNextNonViewed) //If no suitable non-viewed post was found: click the last element.
+			if (!foundNextNonViewed) {//If no suitable non-viewed post was found: click the last element.
+				console.log("No non-viewed posts found, going to last thumbnail in side gallery.");
 				sgItems[sgItems.length - 1].click();
+			}
 		}
 		else //If skipping viewed posts is disabled: click the next button.
 			document.getElementsByClassName("btn btn-action navNext")[0].click();

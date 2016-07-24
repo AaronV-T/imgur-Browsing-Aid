@@ -25,7 +25,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
 	if (details.reason == "install") {
 		chrome.runtime.openOptionsPage(); 
 		
-		if (extensionID == "bmkkppdpbgfhfcppblpmbbiibeoeledm"){
+		if (extensionID == "bmkkppdpbgfhfcppblpmbbiibeoeledm") {
 			$.ajax({
 				url: 'http://tollski.com/imgur_browsing_aid/index.php',
 				type: 'post',
@@ -35,10 +35,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
 				headers: {
 					
 				}
-			},
-			function(){
-
-			});
+			}, function() {});
 		}
 		else
 			console.log(extensionID);
