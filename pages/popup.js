@@ -6,6 +6,7 @@ document.getElementById('openBlockedKeywords').addEventListener('click', openBlo
 document.getElementById('openFavoriteComments').addEventListener('click', openFavoriteComments);
 document.getElementById('openBookmarkedPosts').addEventListener('click', openBookmarkedPosts);
 document.getElementById('openFeedback').addEventListener('click', openFeedback);
+document.getElementById('randomSpan').addEventListener('click', openRandom);
 
 var followedUserList = new Array();
 
@@ -79,6 +80,10 @@ function openFeedback() {
 
 function openOptions() {
 	chrome.runtime.openOptionsPage();
+}
+
+function openRandom() {
+	chrome.tabs.create({ 'url': "http://imgur.com/gallery/random" });
 }
 
 function showSnakeGame() {
